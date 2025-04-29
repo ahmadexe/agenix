@@ -1,7 +1,7 @@
 // Internal file, not part of the Public API
 
-import 'package:agenix/core/memory/data/agent_message.dart';
-import 'package:agenix/core/memory/data/data_store.dart';
+import 'package:agenix/src/memory/data/agent_message.dart';
+import 'package:agenix/src/memory/data/data_store.dart';
 
 class _MemoryManager {
   final DataStore dataStore;

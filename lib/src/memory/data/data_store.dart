@@ -3,7 +3,7 @@
 // (e.g., SQLite, Hive, Firestore, MongoDB or external sources) without changing the core logic of the agent's memory management.
 // For vector databases, the data layer should implement the [VectorDataStore] interface.
 
-import 'package:agenix/core/memory/data/agent_message.dart';
+import 'package:agenix/src/memory/data/agent_message.dart';
 
 abstract class DataStore {
   Future<void> saveMessage(String convoId, AgentMessage msg, {Object? metaData});
