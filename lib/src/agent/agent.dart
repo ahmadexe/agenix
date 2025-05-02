@@ -46,7 +46,6 @@ class Agent {
     // TODO: Add memory manager implementation
     final memoryMessages = await _memoryManager.getContext(
       convoId,
-      limit: memoryLimit,
       metaData: metaData,
     );
 
