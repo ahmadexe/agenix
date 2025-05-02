@@ -13,3 +13,5 @@
 - [ ] I have written tests (if applicable)
 
 ## Issue Linked to the PR
+
+## Aditional Information
