@@ -31,10 +31,31 @@ class Agent {
     _memoryManager = _MemoryManager(dataStore: dataStore);
     this.toolRegistry = toolRegistry;
     this.llm = llm;
-    
 
     String jsonString = await rootBundle.loadString('assets/system_data.json');
     final raw = json.decode(jsonString);
     _promptBuilder = _PromptBuilder(systemPrompt: raw);
+  }
+
+  Future<String> generateResponse({
+    required String convoId,
+    required AgentMessage userMessage,
+    int memoryLimit = 10,
+    Object? metaData,
+  }) async {
+    // TODO: Add memory manager implementation
+    final memoryMessages = await _memoryManager.getContext(
+      convoId,
+      limit: memoryLimit,
+      metaData: metaData,
+    );
+
+    final prompt = _promptBuilder.buildTextPrompt(
+      memoryMessages: memoryMessages,
+      userMessage: userMessage,
+    );
+
+    final response = await llm.generate(prompt: prompt);
+    return response;
   }
 }

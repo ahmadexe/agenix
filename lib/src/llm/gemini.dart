@@ -1,13 +1,31 @@
+import 'package:agenix/src/static/_pkg_constants.dart';
+import 'package:flutter/foundation.dart';
+
 import 'package:agenix/src/llm/llm.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class Gemini extends LLM {
-  @override
-  Future<String> generate({required String prompt}) {
-    // TODO: implement generate
-    throw UnimplementedError();
+  late final GenerativeModel _model;
+
+  Gemini({
+    required String apiKey,
+    required String modelName,
+  }) {
+    final model = GenerativeModel(
+      model: modelName,
+      apiKey: apiKey,
+    );
+
+    _model = model;
+    debugPrint('Gemini initialized');
   }
 
   @override
   String get modelId => 'gemini';
-  
+
+  @override
+  Future<String> generate({required String prompt}) async {
+    final response = await _model.generateContent([Content.text(prompt)]);
+    return response.text ?? kLLMResponseOnFailure;
+  }
 }
