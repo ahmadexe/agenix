@@ -8,3 +8,8 @@
 * Improved tool pipeline to allow the agent to understand tools without params
 * Updated documentation
 * Added tests with tool supports
+
+
+## 1.0.1
+
+* Added keywords for better search
