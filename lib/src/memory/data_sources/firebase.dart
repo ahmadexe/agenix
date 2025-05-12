@@ -1,3 +1,5 @@
+// Internal File, not part of the Public API
+
 import 'package:agenix/src/memory/data/agent_message.dart';
 import 'package:agenix/src/memory/data/conversation.dart';
 import 'package:agenix/src/memory/data/data_store.dart';
@@ -76,7 +78,7 @@ class FirebaseDataStore extends DataStore {
           .doc(conversationId)
           .collection('messages');
 
-      final snapshots = await ref.orderBy('time', descending: true).get();
+      final snapshots = await ref.orderBy('generatedAt').get();
       if (snapshots.docs.isEmpty) return [];
 
       return snapshots.docs

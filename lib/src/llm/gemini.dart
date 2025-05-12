@@ -1,23 +1,16 @@
-import 'package:agenix/src/static/_pkg_constants.dart';
-import 'package:flutter/foundation.dart';
+// Internal File, not part of the Public API
 
+import 'package:agenix/src/static/_pkg_constants.dart';
 import 'package:agenix/src/llm/llm.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class Gemini extends LLM {
   late final GenerativeModel _model;
 
-  Gemini({
-    required String apiKey,
-    required String modelName,
-  }) {
-    final model = GenerativeModel(
-      model: modelName,
-      apiKey: apiKey,
-    );
+  Gemini({required String apiKey, required String modelName}) {
+    final model = GenerativeModel(model: modelName, apiKey: apiKey);
 
     _model = model;
-    debugPrint('Gemini initialized');
   }
 
   @override
