@@ -60,7 +60,6 @@ class Agent {
     );
 
     final rawLLMResponse = await llm.generate(prompt: prompt);
-
     final parsed = _promptParser.parse(rawLLMResponse);
 
     if (parsed.toolNames.isEmpty) {
