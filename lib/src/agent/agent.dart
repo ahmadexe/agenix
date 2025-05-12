@@ -4,9 +4,9 @@ import 'package:agenix/src/llm/llm.dart';
 import 'package:agenix/src/memory/data/agent_message.dart';
 import 'package:agenix/src/memory/data/data_store.dart';
 import 'package:agenix/src/static/_pkg_constants.dart';
-import 'package:agenix/src/tools/parser.dart';
+import 'package:agenix/src/tools/_parser.dart';
 import 'package:agenix/src/tools/tool_registry.dart';
-import 'package:agenix/src/tools/tool_runner.dart';
+import 'package:agenix/src/tools/_tool_runner.dart';
 import 'package:flutter/services.dart';
 
 part '_memory_manager.dart';

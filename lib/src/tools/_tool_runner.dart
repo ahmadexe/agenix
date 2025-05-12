@@ -1,9 +1,7 @@
-import 'package:agenix/src/tools/parser.dart';
+import 'package:agenix/src/tools/_parser.dart';
 import 'package:agenix/src/tools/tool_registry.dart';
 
 class ToolRunner {
-  ToolRunner();
-
   Future<List<Map<String, dynamic>>> runTools(PromptParserResult result) async {
     final registry = ToolRegistry();
     final List<Map<String, dynamic>> responses = [];
