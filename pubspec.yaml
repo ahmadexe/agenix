@@ -68,3 +68,5 @@ flutter:
 
 false_secrets:
   - example/**/firebase_options.dart
+  - example/**/google-services.json
+  - example/**/GoogleService-Info.plist
