@@ -13,6 +13,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   String _response = 'Awaiting for response...';
 
   @override
+  void initState() {
+    super.initState();
+    ToolRegistry().registerTool(NewsTool(name: 'news_tool', description: 'This tool should be used if the user asks for news of any sort.'));
+    ToolRegistry().registerTool(WeatherTool(name: 'weather_tool', description: 'This tool should be used if the user asks for the weather.', parameters: [
+      ParamSpec(name: 'location', type: 'String', description: 'The location for which to get the weather.', required: true),
+    ]));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final TextEditingController controller = TextEditingController();
     return Scaffold(
@@ -58,5 +67,34 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ),
       ),
     );
+  }
+}
+
+class NewsTool extends Tool {
+  NewsTool({required super.name, required super.description});
+
+  @override
+  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+    return {
+      'title': 'Breaking News',
+      'description': 'This is a sample news description.',
+    };  
+  }
+}
+
+class WeatherTool extends Tool {
+  WeatherTool({required super.name, required super.description, required super.parameters});
+
+  @override
+  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+    return {
+      'temperature': '25°C',
+      'condition': 'Sunny',
+      'location': params['location'],
+    };
   }
 }
