@@ -1,39 +1,46 @@
+import 'package:agenix/agenix.dart';
 import 'package:flutter/material.dart';
 
-class FetchConvoScreen extends StatefulWidget {
-  const FetchConvoScreen({super.key});
+class FetchMessagesScreen extends StatefulWidget {
+  const FetchMessagesScreen({super.key});
 
   @override
-  State<FetchConvoScreen> createState() => _FetchConvoScreenState();
+  State<FetchMessagesScreen> createState() => _FetchMessagesScreenState();
 }
 
-class _FetchConvoScreenState extends State<FetchConvoScreen> {
-
-  @override
-  void initState() {
-    super.initState();
-
-  }
+class _FetchMessagesScreenState extends State<FetchMessagesScreen> {
+  List<AgentMessage>? messages;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fetch Conversation'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Fetch Conversation Screen'),
-            ElevatedButton(
-              onPressed: () {
-                // Add your fetch conversation logic here
-              },
-              child: const Text('Fetch Conversation'),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: const Text('Fetch Conversation')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child:
+            messages == null
+                ? ElevatedButton(
+                  onPressed: () async {
+                    final messages = await Agent().getMessages(
+                      conversationId: '1',
+                    );
+                    setState(() {
+                      this.messages = messages;
+                    });
+                  },
+                  child: const Text('Fetch Conversation'),
+                )
+                : ListView.builder(
+                  itemCount: messages!.length,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    final message = messages![index];
+                    return ListTile(
+                      title: Text(message.content),
+                      subtitle: Text(message.generatedAt.toString()),
+                    );
+                  },
+                ),
       ),
     );
   }

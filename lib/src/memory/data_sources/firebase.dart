@@ -78,7 +78,7 @@ class FirebaseDataStore extends DataStore {
           .doc(conversationId)
           .collection('messages');
 
-      final snapshots = await ref.orderBy('generatedAt', descending: true).get();
+      final snapshots = await ref.orderBy('generatedAt').get();
       if (snapshots.docs.isEmpty) return [];
 
       return snapshots.docs

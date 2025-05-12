@@ -115,24 +115,33 @@ class Agent {
     }
   }
 
-  Future<List<AgentMessage>> getMessages(
-    String conversationId, {
+  Future<List<AgentMessage>> getMessages({
+    required String conversationId,
     Object? metaData,
   }) async {
-    return await _memoryManager.dataStore.getMessages(conversationId, metaData: metaData);
+    return await _memoryManager.dataStore.getMessages(
+      conversationId,
+      metaData: metaData,
+    );
   }
 
-  Future<List<Conversation>> getAllConversations(
-    String conversationId, {
+  Future<List<Conversation>> getAllConversations({
+    required String conversationId,
     Object? metaData,
   }) async {
-    return await _memoryManager.dataStore.getConversations(conversationId, metaData: metaData);
+    return await _memoryManager.dataStore.getConversations(
+      conversationId,
+      metaData: metaData,
+    );
   }
 
-  Future<void> deleteConversation(
-    String conversationId, {
+  Future<void> deleteConversation({
+    required String conversationId,
     Object? metaData,
   }) async {
-    await _memoryManager.dataStore.deleteConversation(conversationId, metaData: metaData);
+    await _memoryManager.dataStore.deleteConversation(
+      conversationId,
+      metaData: metaData,
+    );
   }
 }
