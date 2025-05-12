@@ -45,7 +45,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
                     setState(() {
                       _isLoading = false;
-                      _response = res;
+                      _response = res.content;
                     });
                   },
                   child: const Text('Send'),

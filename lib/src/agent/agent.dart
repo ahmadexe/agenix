@@ -29,51 +29,92 @@ class Agent {
     if (_isInitialized) {
       throw Exception('Agent is already initialized');
     }
+    try {
+      _isInitialized = true;
 
-    _isInitialized = true;
+      _memoryManager = _MemoryManager(dataStore: dataStore);
+      this.llm = llm;
 
-    _memoryManager = _MemoryManager(dataStore: dataStore);
-    this.llm = llm;
+      String jsonString = await rootBundle.loadString(
+        'assets/system_data.json',
+      );
+      final raw = json.decode(jsonString);
+      _promptBuilder = _PromptBuilder(systemPrompt: raw);
 
-    String jsonString = await rootBundle.loadString('assets/system_data.json');
-    final raw = json.decode(jsonString);
-    _promptBuilder = _PromptBuilder(systemPrompt: raw);
-
-    _promptParser = PromptParser();
-    _toolRunner = ToolRunner();
+      _promptParser = PromptParser();
+      _toolRunner = ToolRunner();
+    } catch (e) {
+      _isInitialized = false;
+      throw Exception('Failed to initialize Agent: $e');
+    }
   }
 
-  Future<String> generateResponse({
+  Future<AgentMessage> generateResponse({
     required String convoId,
     required AgentMessage userMessage,
     int memoryLimit = 10,
     Object? metaData,
   }) async {
-    final memoryMessages = await _memoryManager.getContext(
-      convoId,
-      metaData: metaData,
-    );
+    try {
+      _memoryManager.saveMessage(convoId, userMessage);
 
-    final prompt = _promptBuilder.buildTextPrompt(
-      memoryMessages: memoryMessages,
-      userMessage: userMessage,
-    );
+      final memoryMessages = await _memoryManager.getContext(
+        convoId,
+        metaData: metaData,
+      );
 
-    final rawLLMResponse = await llm.generate(prompt: prompt);
-    final parsed = _promptParser.parse(rawLLMResponse);
+      final prompt = _promptBuilder.buildTextPrompt(
+        memoryMessages: memoryMessages,
+        userMessage: userMessage,
+      );
 
-    if (parsed.toolNames.isEmpty) {
-      return parsed.fallbackResponse ?? kLLMResponseOnFailure;
+      final rawLLMResponse = await llm.generate(prompt: prompt);
+      final parsed = _promptParser.parse(rawLLMResponse);
+
+      if (parsed.toolNames.isEmpty) {
+        final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
+        final botResponse = AgentMessage(
+          content: response,
+          isFromAgent: true,
+          generatedAt: DateTime.now(),
+        );
+        _memoryManager.saveMessage(convoId, botResponse);
+        return botResponse;
+      }
+
+      final toolResponses = await _toolRunner.runTools(parsed);
+
+      String response = toolResponses
+          .map((r) => r.values.first.toString())
+          .join("\n");
+      if (response.isEmpty) {
+        response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
+        final botMessage = AgentMessage(
+          content: response,
+          isFromAgent: true,
+          generatedAt: DateTime.now(),
+        );
+        _memoryManager.saveMessage(convoId, botMessage);
+        return botMessage;
+      }
+      final queryResponse =
+          "This is the infromation I can find for your query\n$response";
+      final botMessage = AgentMessage(
+        content: queryResponse,
+        isFromAgent: true,
+        generatedAt: DateTime.now(),
+      );
+      _memoryManager.saveMessage(convoId, botMessage);
+      return botMessage;
+    } catch (e) {
+      if (!_isInitialized) {
+        throw Exception('Agent is not initialized, please call init() first.');
+      }
+      return AgentMessage(
+        content: kLLMResponseOnFailure,
+        isFromAgent: true,
+        generatedAt: DateTime.now(),
+      );
     }
-
-    final toolResponses = await _toolRunner.runTools(parsed);
-
-    String response = toolResponses
-        .map((r) => r.values.first.toString())
-        .join("\n");
-    if (response.isEmpty) {
-      return parsed.fallbackResponse ?? kLLMResponseOnFailure;
-    }
-    return "This is the infromation I can find for your query\n$response";
   }
 }
