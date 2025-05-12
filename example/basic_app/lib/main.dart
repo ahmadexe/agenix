@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Agenix Basic Example',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const ChatbotScreen(),
+      home: const BaseScreen(),
     );
   }
 }
@@ -38,18 +38,14 @@ class BaseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Voucher Vertical Tests'),
-      ),
+      appBar: AppBar(title: const Text('Voucher Vertical Tests')),
       body: ListView(
         children: [
           ListTile(
             title: const Text('Test Agent'),
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ChatbotScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const ChatbotScreen()),
               );
             },
           ),
@@ -58,7 +54,7 @@ class BaseScreen extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const FetchConvoScreen(),
+                  builder: (context) => const FetchMessagesScreen(),
                 ),
               );
             },
