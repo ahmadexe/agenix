@@ -31,7 +31,7 @@ class _PromptBuilder {
     if (tools.isNotEmpty) {
       buffer.writeln("Tools: ");
       for (final tool in tools) {
-        buffer.writeln("${tool.name}: ${tool.description}");
+        buffer.writeln("{${tool.name}: ${tool.description}},");
       }
     }
 
