@@ -27,8 +27,36 @@ class _PromptBuilder {
       }
     }
 
+    final tools = ToolRegistry().getAllTools();
+    if (tools.isNotEmpty) {
+      buffer.writeln("Tools: ");
+      for (final tool in tools) {
+        buffer.writeln(
+          "{${tool.name}: ${tool.description}, ${tool.parameters?.map((e) => e!.toJson())}},",
+        );
+      }
+    }
+
+    buffer.writeln('''
+    Output format if tools are available for the prompt:
+    {
+      "tools": "<tool_name>, <tool2_name>, ...",
+      "parameters": {
+        "<tool_name>": {
+          "<param_name>": "<param_value>",
+          ...
+        },
+        ...
+      },
+    }
+    Output format if no tools are available for the prompt:
+    {
+      "response": "<response>"
+    }
+    ''');
+
     buffer.writeln(
-      "${"\nBased on the system instruction and chat history (is present), respond to the prompt: "}: ${userMessage.content}",
+      "${"\nBased on the system instruction, chat history, and tools, generate a response for the user. If a tool should be used for the response, include the tool name in the response. If multiple tools need to be used in order, include the name of multiple tools, seperated by commas, make sure the names are included in the correct order, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. This is the prompt: "}: ${userMessage.content}",
     );
 
     return buffer.toString().trim();

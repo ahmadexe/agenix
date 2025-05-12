@@ -1,11 +1,11 @@
+import 'package:agenix/src/tools/param_spec.dart';
+
 abstract class Tool {
   final String name;
   final String description;
+  final List<ParamSpec?>? parameters;
 
-  Tool({
-    required this.name,
-    required this.description,
-  });
+  Tool({required this.name, required this.description, this.parameters});
 
-  Future<Object?> run(Map<String, dynamic> params);
+  Future<Map<String, dynamic>?> run(Map<String, dynamic> params);
 }
