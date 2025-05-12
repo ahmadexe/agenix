@@ -18,10 +18,9 @@ class Agent {
   
   late final _MemoryManager _memoryManager;
   late final _PromptBuilder _promptBuilder;
-  late final ToolRegistry toolRegistry;
   late final LLM llm;
 
-  Future<void> init({required DataStore dataStore, required ToolRegistry toolRegistry, required LLM llm}) async {
+  Future<void> init({required DataStore dataStore, required LLM llm}) async {
     if (_isInitialized) {
       throw Exception('Agent is already initialized');
     }
@@ -29,7 +28,6 @@ class Agent {
     _isInitialized = true;
 
     _memoryManager = _MemoryManager(dataStore: dataStore);
-    this.toolRegistry = toolRegistry;
     this.llm = llm;
 
     String jsonString = await rootBundle.loadString('assets/system_data.json');
