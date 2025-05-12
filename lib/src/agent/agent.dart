@@ -1,11 +1,8 @@
 import 'dart:convert';
 
-import 'package:agenix/src/llm/llm.dart';
-import 'package:agenix/src/memory/data/agent_message.dart';
-import 'package:agenix/src/memory/data/data_store.dart';
+import 'package:agenix/agenix.dart';
 import 'package:agenix/src/static/_pkg_constants.dart';
 import 'package:agenix/src/tools/_parser.dart';
-import 'package:agenix/src/tools/tool_registry.dart';
 import 'package:agenix/src/tools/_tool_runner.dart';
 import 'package:flutter/services.dart';
 
@@ -116,5 +113,26 @@ class Agent {
         generatedAt: DateTime.now(),
       );
     }
+  }
+
+  Future<List<AgentMessage>> getMessages(
+    String conversationId, {
+    Object? metaData,
+  }) async {
+    return await _memoryManager.dataStore.getMessages(conversationId, metaData: metaData);
+  }
+
+  Future<List<Conversation>> getAllConversations(
+    String conversationId, {
+    Object? metaData,
+  }) async {
+    return await _memoryManager.dataStore.getConversations(conversationId, metaData: metaData);
+  }
+
+  Future<void> deleteConversation(
+    String conversationId, {
+    Object? metaData,
+  }) async {
+    await _memoryManager.dataStore.deleteConversation(conversationId, metaData: metaData);
   }
 }
