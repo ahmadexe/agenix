@@ -15,10 +15,28 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   void initState() {
     super.initState();
-    ToolRegistry().registerTool(NewsTool(name: 'news_tool', description: 'This tool should be used if the user asks for news of any sort.'));
-    ToolRegistry().registerTool(WeatherTool(name: 'weather_tool', description: 'This tool should be used if the user asks for the weather.', parameters: [
-      ParamSpec(name: 'location', type: 'String', description: 'The location for which to get the weather.', required: true),
-    ]));
+    ToolRegistry().registerTool(
+      NewsTool(
+        name: 'news_tool',
+        description:
+            'This tool should be used if the user asks for news of any sort.',
+      ),
+    );
+    ToolRegistry().registerTool(
+      WeatherTool(
+        name: 'weather_tool',
+        description:
+            'This tool should be used if the user asks for the weather.',
+        parameters: [
+          ParamSpec(
+            name: 'location',
+            type: 'String',
+            description: 'The location for which to get the weather.',
+            required: true,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -80,12 +98,16 @@ class NewsTool extends Tool {
     return {
       'title': 'Breaking News',
       'description': 'This is a sample news description.',
-    };  
+    };
   }
 }
 
 class WeatherTool extends Tool {
-  WeatherTool({required super.name, required super.description, required super.parameters});
+  WeatherTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
 
   @override
   Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
