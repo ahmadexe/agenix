@@ -1,7 +1,8 @@
 name: agenix
 description: "A framework for building agentic applications"
 version: 0.0.1
-homepage:
+homepage: https://github.com/ahmadexe/agenix
+repository: https://github.com/ahmadexe/agenix
 
 environment:
   sdk: ^3.7.2
@@ -15,10 +16,10 @@ dependencies:
   google_generative_ai: ^0.4.7
 
   # Firebase
-  firebase_core: 3.9.0
-  firebase_auth: 5.3.4
-  cloud_firestore: 5.6.0
-  firebase_storage: 12.3.7
+  firebase_core: ^3.9.0
+  firebase_auth: ^5.3.4
+  cloud_firestore: ^5.6.0
+  firebase_storage: ^12.3.7
   
   # Utils
   uuid: ^4.5.1
