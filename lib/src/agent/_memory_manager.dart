@@ -19,10 +19,7 @@ class _MemoryManager {
     String convoId, {
     Object? metaData,
   }) async {
+    // TODO: Generate efficient graph based context
     return await dataStore.getMessages(convoId, metaData: metaData);
-  }
-
-  Future<void> deleteConversation(String convoId, {Object? metaData}) async {
-    await dataStore.deleteConversation(convoId, metaData: metaData);
   }
 }

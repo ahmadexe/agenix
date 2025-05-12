@@ -5,6 +5,7 @@
 
 import 'package:agenix/src/memory/data/agent_message.dart';
 import 'package:agenix/src/memory/data/conversation.dart';
+import 'package:agenix/src/memory/data_sources/firebase.dart';
 
 abstract class DataStore {
   Future<void> saveMessage(
@@ -21,4 +22,7 @@ abstract class DataStore {
     String convoId, {
     Object? metaData,
   });
+
+  // Add more methods as needed
+  static DataStore firestoreDataStore() => FirebaseDataStore();
 }
