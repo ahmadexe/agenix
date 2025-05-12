@@ -17,25 +17,12 @@ class _MemoryManager {
 
   Future<List<AgentMessage>> getContext(
     String convoId, {
-    int limit = 10,
     Object? metaData,
   }) async {
-    return await dataStore.getRecentMessages(
-      convoId,
-      limit: limit,
-      metaData: metaData,
-    );
+    return await dataStore.getMessages(convoId, metaData: metaData);
   }
 
   Future<void> deleteConversation(String convoId, {Object? metaData}) async {
     await dataStore.deleteConversation(convoId, metaData: metaData);
-  }
-
-  Future<void> updateMessage(
-    String convoId,
-    AgentMessage updatedMsg, {
-    Object? metaData,
-  }) async {
-    await dataStore.updateMessage(convoId, updatedMsg, metaData: metaData);
   }
 }

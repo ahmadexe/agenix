@@ -43,10 +43,8 @@ class Agent {
     int memoryLimit = 10,
     Object? metaData,
   }) async {
-    // TODO: Add memory manager implementation
     final memoryMessages = await _memoryManager.getContext(
       convoId,
-      limit: memoryLimit,
       metaData: metaData,
     );
 
