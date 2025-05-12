@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "296327160947",
+    "project_id": "agenix-test",
+    "storage_bucket": "agenix-test.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296327160947:android:18df36606eea95da12b606",
+        "android_client_info": {
+          "package_name": "com.example.basic_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACccZhGDdewfPYxbnFOTEvxPRK9hdxQzY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
