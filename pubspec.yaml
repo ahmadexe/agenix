@@ -1,12 +1,21 @@
 name: agenix
 description: "A framework for building agentic applications"
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/ahmadexe/agenix
 repository: https://github.com/ahmadexe/agenix
 
 environment:
   sdk: ^3.7.2
   flutter: ">=1.17.0"
+
+keywords:
+  - flutter
+  - ai
+  - prompt
+  - gemini
+  - tools
+  - llm
+  - agentic
 
 dependencies:
   flutter:
