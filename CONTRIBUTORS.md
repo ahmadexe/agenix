@@ -4,7 +4,7 @@ Thanks to all the contributors who have helped make **agenix** better. 🚀
 
 ## 💻 Code & Maintenance
 
-- [@muhammad-ahmad-dev](https://github.com/ahmadexe) – Creator, Maintainer
+- [@ahmadexe](https://github.com/ahmadexe) – Creator, Maintainer
 
 ---
 

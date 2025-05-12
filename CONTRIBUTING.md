@@ -105,6 +105,8 @@ docs/updated-readme-to-add-something
 
 tools/added-support-for-tool-chaining
 
+## Concluding
+Once you are done please add your name to contributors.md!
 
 ## Attribution
 This guide is based on the [contributing.md](https://contributing.md/generator)!
