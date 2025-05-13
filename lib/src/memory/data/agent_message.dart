@@ -7,7 +7,7 @@ class AgentMessage {
   final bool isFromAgent;
   final Uint8List? imageData;
   final String? imageUrl;
-  
+
   AgentMessage({
     required this.content,
     required this.generatedAt,
@@ -44,7 +44,9 @@ class AgentMessage {
   factory AgentMessage.fromMap(Map<String, dynamic> map) {
     return AgentMessage(
       content: map['content'] as String,
-      generatedAt: DateTime.fromMillisecondsSinceEpoch(map['generatedAt'] as int),
+      generatedAt: DateTime.fromMillisecondsSinceEpoch(
+        map['generatedAt'] as int,
+      ),
       isFromAgent: map['isFromAgent'] as bool,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
     );
@@ -52,7 +54,8 @@ class AgentMessage {
 
   String toJson() => json.encode(toMap());
 
-  factory AgentMessage.fromJson(String source) => AgentMessage.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory AgentMessage.fromJson(String source) =>
+      AgentMessage.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -62,21 +65,20 @@ class AgentMessage {
   @override
   bool operator ==(covariant AgentMessage other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.content == content &&
-      other.generatedAt == generatedAt &&
-      other.isFromAgent == isFromAgent &&
-      other.imageData == imageData &&
-      other.imageUrl == imageUrl;
+
+    return other.content == content &&
+        other.generatedAt == generatedAt &&
+        other.isFromAgent == isFromAgent &&
+        other.imageData == imageData &&
+        other.imageUrl == imageUrl;
   }
 
   @override
   int get hashCode {
     return content.hashCode ^
-      generatedAt.hashCode ^
-      isFromAgent.hashCode ^
-      imageData.hashCode ^
-      imageUrl.hashCode;
+        generatedAt.hashCode ^
+        isFromAgent.hashCode ^
+        imageData.hashCode ^
+        imageUrl.hashCode;
   }
 }

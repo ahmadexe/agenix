@@ -12,7 +12,8 @@ class FirebaseService {
       debugPrint("Dummy user authenticated");
     } catch (e) {
       debugPrint(
-          'Error initializing Firebase (Failed while trying to authenticate dummy uesr): $e');
+        'Error initializing Firebase (Failed while trying to authenticate dummy uesr): $e',
+      );
     }
   }
 }

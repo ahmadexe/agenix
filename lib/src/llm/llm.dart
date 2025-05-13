@@ -4,12 +4,11 @@
 import 'package:agenix/src/llm/gemini.dart';
 
 abstract class LLM {
-  Future<String> generate({
-    required String prompt,
-  });
+  Future<String> generate({required String prompt});
 
   String get modelId;
 
   // Add more methods as needed
-  static geminiLLM({required String apiKey, required String modelName}) => Gemini(apiKey: apiKey, modelName: modelName);
+  static geminiLLM({required String apiKey, required String modelName}) =>
+      Gemini(apiKey: apiKey, modelName: modelName);
 }
