@@ -21,7 +21,6 @@ class ToolRegistry {
     _tools[tool.name] = tool;
   }
 
-
   // This method should be called whenever developers want to remove a tool.
   // It unregisters the tool from the registry.
   void unregisterTool(String toolName) {
@@ -34,7 +33,6 @@ class ToolRegistry {
   Tool? getTool(String toolName) {
     return _tools[toolName];
   }
-
 
   // This method gets all the tools in the registry.
   // It is used by prompt builders to list all available tools.

@@ -8,7 +8,6 @@ import 'package:agenix/src/memory/data/conversation.dart';
 import 'package:agenix/src/memory/data_sources/firebase.dart';
 
 abstract class DataStore {
-
   // This is the abstract method to save the data, it should be implemented by the concrete class
   Future<void> saveMessage(
     String convoId,

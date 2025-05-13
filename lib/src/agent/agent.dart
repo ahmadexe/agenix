@@ -22,7 +22,6 @@ class Agent {
   late final PromptParser _promptParser;
   late final ToolRunner _toolRunner;
 
-
   // Initialize the agent with a data store and LLM, and load the system data.
   // In the system data you can define the personality of the agent, the name of the agent, and anything else that comes to mind.
   Future<void> init({required DataStore dataStore, required LLM llm}) async {

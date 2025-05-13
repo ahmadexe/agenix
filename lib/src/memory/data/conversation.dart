@@ -6,7 +6,8 @@ import 'dart:convert';
 /// Represents a chat conversation summary, typically shown in a conversation list.
 /// Stores the last message exchanged, the time it occurred, and a unique ID for identification.
 class Conversation {
-  final String lastMessage; // The text of the most recent message in the conversation
+  final String
+  lastMessage; // The text of the most recent message in the conversation
   final DateTime lastMessageTime; // Timestamp of the last message
   final String conversationId; // Unique ID identifying the conversation
 

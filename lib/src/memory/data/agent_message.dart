@@ -1,5 +1,5 @@
-// This file defines the AgentMessage class used to represent messages exchanged 
-// between an agent (e.g., AI chatbot) and a user. 
+// This file defines the AgentMessage class used to represent messages exchanged
+// between an agent (e.g., AI chatbot) and a user.
 // It supports text content, timestamps, agent identification, and optional image data or URL.
 
 import 'dart:convert';
@@ -10,8 +10,10 @@ import 'dart:typed_data';
 class AgentMessage {
   final String content; // The main text content of the message
   final DateTime generatedAt; // Timestamp when the message was generated
-  final bool isFromAgent; // Indicates whether the message is from the agent (true) or user (false)
-  final Uint8List? imageData; // Optional binary image data (e.g., for displaying inline)
+  final bool
+  isFromAgent; // Indicates whether the message is from the agent (true) or user (false)
+  final Uint8List?
+  imageData; // Optional binary image data (e.g., for displaying inline)
   final String? imageUrl; // Optional URL to an image
 
   AgentMessage({
