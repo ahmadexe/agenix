@@ -16,6 +16,8 @@ class Gemini extends LLM {
   @override
   String get modelId => 'gemini';
 
+  // The overridden method to generate a response using the Gemini model.
+  // Every LLM implementation must implement this method.
   @override
   Future<String> generate({required String prompt}) async {
     final response = await _model.generateContent([Content.text(prompt)]);

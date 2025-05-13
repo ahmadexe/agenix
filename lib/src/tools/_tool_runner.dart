@@ -1,6 +1,9 @@
 import 'package:agenix/src/tools/_parser.dart';
 import 'package:agenix/src/tools/tool_registry.dart';
 
+// This class is responsible for running tools based on the parsed prompt.
+// It takes the parsed result from the PromptParser and executes the tools with the provided parameters.
+// The output from each tool is collected and returned as a list of maps.
 class ToolRunner {
   Future<List<Map<String, dynamic>>> runTools(PromptParserResult result) async {
     final registry = ToolRegistry();

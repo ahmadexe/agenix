@@ -8,7 +8,7 @@ abstract class LLM {
 
   String get modelId;
 
-  // Add more methods as needed
+  // Add more methods as needed, such as for OpenAI, Claude, etc.
   static geminiLLM({required String apiKey, required String modelName}) =>
       Gemini(apiKey: apiKey, modelName: modelName);
 }

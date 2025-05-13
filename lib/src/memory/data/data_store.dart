@@ -8,21 +8,27 @@ import 'package:agenix/src/memory/data/conversation.dart';
 import 'package:agenix/src/memory/data_sources/firebase.dart';
 
 abstract class DataStore {
+
+  // This is the abstract method to save the data, it should be implemented by the concrete class
   Future<void> saveMessage(
     String convoId,
     AgentMessage msg, {
     Object? metaData,
   });
+
+  // This is the abstract method to get the messages, it should be implemented by the concrete class
   Future<List<AgentMessage>> getMessages(
     String conversationId, {
     Object? metaData,
   });
+
+  // This is the abstract method to delete the conversation, it should be implemented by the concrete class
   Future<void> deleteConversation(String conversationId, {Object? metaData});
   Future<List<Conversation>> getConversations(
     String convoId, {
     Object? metaData,
   });
 
-  // Add more methods as needed
+  // Add more methods as needed, such as for Supabase etc.
   static DataStore firestoreDataStore() => FirebaseDataStore();
 }

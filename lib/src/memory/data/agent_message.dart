@@ -1,12 +1,18 @@
+// This file defines the AgentMessage class used to represent messages exchanged 
+// between an agent (e.g., AI chatbot) and a user. 
+// It supports text content, timestamps, agent identification, and optional image data or URL.
+
 import 'dart:convert';
 import 'dart:typed_data';
 
+/// Represents a message in a conversation, either from the agent or the user.
+/// It can optionally contain an image (as binary data or a URL).
 class AgentMessage {
-  final String content;
-  final DateTime generatedAt;
-  final bool isFromAgent;
-  final Uint8List? imageData;
-  final String? imageUrl;
+  final String content; // The main text content of the message
+  final DateTime generatedAt; // Timestamp when the message was generated
+  final bool isFromAgent; // Indicates whether the message is from the agent (true) or user (false)
+  final Uint8List? imageData; // Optional binary image data (e.g., for displaying inline)
+  final String? imageUrl; // Optional URL to an image
 
   AgentMessage({
     required this.content,
@@ -16,6 +22,7 @@ class AgentMessage {
     this.imageUrl,
   });
 
+  /// Creates a copy of the current message with optional new values for each field
   AgentMessage copyWith({
     String? content,
     DateTime? generatedAt,
@@ -32,6 +39,7 @@ class AgentMessage {
     );
   }
 
+  /// Converts the message to a map (excluding `imageData`, which is not serializable)
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'content': content,
@@ -41,6 +49,7 @@ class AgentMessage {
     };
   }
 
+  /// Constructs a message from a map (used for decoding from storage or network)
   factory AgentMessage.fromMap(Map<String, dynamic> map) {
     return AgentMessage(
       content: map['content'] as String,
@@ -52,8 +61,10 @@ class AgentMessage {
     );
   }
 
+  /// Converts the message to a JSON string
   String toJson() => json.encode(toMap());
 
+  /// Parses a message from a JSON string
   factory AgentMessage.fromJson(String source) =>
       AgentMessage.fromMap(json.decode(source) as Map<String, dynamic>);
 
@@ -62,6 +73,7 @@ class AgentMessage {
     return 'AgentMessage(content: $content, generatedAt: $generatedAt, isFromAgent: $isFromAgent, imageData: $imageData, imageUrl: $imageUrl)';
   }
 
+  /// Equality check based on all fields
   @override
   bool operator ==(covariant AgentMessage other) {
     if (identical(this, other)) return true;
@@ -73,6 +85,7 @@ class AgentMessage {
         other.imageUrl == imageUrl;
   }
 
+  /// Hash code based on all fields
   @override
   int get hashCode {
     return content.hashCode ^
