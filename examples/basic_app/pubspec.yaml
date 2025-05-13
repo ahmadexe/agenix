@@ -36,9 +36,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   firebase_core: ^3.9.0
 
-  agenix:
-    path: ../../
+
   firebase_auth: ^5.3.4
+  agenix: ^1.0.1
 
 dev_dependencies:
   flutter_test:

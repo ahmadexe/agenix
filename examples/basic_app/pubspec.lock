@@ -12,10 +12,11 @@ packages:
   agenix:
     dependency: "direct main"
     description:
-      path: "../.."
-      relative: true
-    source: path
-    version: "0.0.1"
+      name: agenix
+      sha256: "8cb95e22af2f76e1540d71882b13b0b56ed2de931956f362e2e5b04edb4af7e0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   async:
     dependency: transitive
     description:
