@@ -1,4 +1,6 @@
 // Internal File, not part of the Public API
+// Firebase is used as a data store for the agent.
+// By default Agenix provides the support for Firebase.
 
 import 'package:agenix/src/memory/data/agent_message.dart';
 import 'package:agenix/src/memory/data/conversation.dart';
