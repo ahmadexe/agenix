@@ -13,3 +13,8 @@
 ## 1.0.1
 
 * Added keywords for better search
+
+
+## 1.0.2
+
+* Updated documentation and refactored the code base
