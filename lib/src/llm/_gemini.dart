@@ -1,5 +1,7 @@
 // Internal File, not part of the Public API
 
+import 'dart:typed_data';
+
 import 'package:agenix/src/static/_pkg_constants.dart';
 import 'package:agenix/src/llm/llm.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -19,8 +21,18 @@ class Gemini extends LLM {
   // The overridden method to generate a response using the Gemini model.
   // Every LLM implementation must implement this method.
   @override
-  Future<String> generate({required String prompt}) async {
-    final response = await _model.generateContent([Content.text(prompt)]);
-    return response.text ?? kLLMResponseOnFailure;
+  Future<String> generate({required String prompt, Uint8List? rawData}) async {
+    if (rawData == null) {
+      final response = await _model.generateContent([Content.text(prompt)]);
+      return response.text ?? kLLMResponseOnFailure;
+    } else {
+      final DataPart dataPart = DataPart('image/jpeg', rawData);
+      final text = TextPart(prompt);
+      final response = await _model.generateContent([
+        Content.multi([text, dataPart]),
+      ]);
+
+      return response.text ?? kLLMResponseOnFailure;
+    }
   }
 }
