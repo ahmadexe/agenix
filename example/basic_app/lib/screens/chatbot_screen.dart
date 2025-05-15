@@ -28,11 +28,28 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         description:
             'This tool should be used if the user asks for the weather.',
         parameters: [
-          ParamSpec(
+          ParameterSpecification(
             name: 'location',
             type: 'String',
             description: 'The location for which to get the weather.',
             required: true,
+          ),
+        ],
+      ),
+    );
+
+    ToolRegistry().registerTool(
+      HelloTool(
+        name: 'hello_tool',
+        description:
+            'This tool should be used if the user asks for hello, or any sort of greeting.',
+        parameters: [
+          ParameterSpecification(
+            name: 'userName',
+            type: 'String',
+            description:
+                'The user name that the agent should use to greet the user.',
+            required: false,
           ),
         ],
       ),
@@ -92,13 +109,21 @@ class NewsTool extends Tool {
   NewsTool({required super.name, required super.description});
 
   @override
-  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
     // Simulate a network call
     await Future.delayed(const Duration(seconds: 2));
-    return {
-      'title': 'Breaking News',
-      'description': 'This is a sample news description.',
+    final apiResponse = {
+      'headline': 'Flutter is Awesome!',
+      'details': 'Flutter 3.0 has been released with amazing features.',
     };
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message:
+          'Breaking News: ${apiResponse['headline']}. \n${apiResponse['details']}',
+      data:
+          apiResponse, // The data field is optional you can return data if it is required.
+    );
   }
 }
 
@@ -110,13 +135,38 @@ class WeatherTool extends Tool {
   });
 
   @override
-  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
     // Simulate a network call
     await Future.delayed(const Duration(seconds: 2));
-    return {
-      'temperature': '25°C',
-      'condition': 'Sunny',
-      'location': params['location'],
-    };
+    final apiResponse = {'temperature': 25, 'condition': 'Sunny'};
+    final location = params['location'] as String;
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message:
+          'The weather in $location is ${apiResponse['condition']} with a temperature of ${apiResponse['temperature']}°C.',
+    );
+  }
+}
+
+class HelloTool extends Tool {
+  HelloTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+    final userName = params['userName'] as String?;
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Hello ${userName ?? 'User'} from the HelloTool!',
+    );
   }
 }

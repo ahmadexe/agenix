@@ -38,7 +38,8 @@ dependencies:
 
 
   firebase_auth: ^5.3.4
-  agenix: ^1.0.1
+  agenix: 
+    path: ../../
 
 dev_dependencies:
   flutter_test:
