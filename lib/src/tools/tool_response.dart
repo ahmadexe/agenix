@@ -3,7 +3,6 @@
 // This class is used to encapsulate the response from a tool, making it easier to handle and process the results.
 // The ToolResponse class is used to represent the response from a tool.
 
-
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';

@@ -88,9 +88,9 @@ class Agent {
 
       final toolResponses = await _toolRunner.runTools(parsed);
 
-      // TODO: Add support for tool chaining, right now we are just joining the messages. 
+      // TODO: Add support for tool chaining, right now we are just joining the messages.
       String response = toolResponses.map((r) => r.message).join('\n');
-      
+
       final botMessage = AgentMessage(
         content: response.isEmpty ? kLLMResponseOnFailure : response,
         isFromAgent: true,
