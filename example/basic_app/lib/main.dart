@@ -11,7 +11,7 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseService.init();
   final agent = Agent();
-  const apiKey = String.fromEnvironment('AIzaSyDPOX2sigmmOM04-tnJKv2ZUWzF-weDXUU');
+  const apiKey = String.fromEnvironment('GEMINI_API_KEY');
   agent.init(
     dataStore: DataStore.firestoreDataStore(),
     llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
