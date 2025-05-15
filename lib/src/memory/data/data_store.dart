@@ -5,7 +5,7 @@
 
 import 'package:agenix/src/memory/data/agent_message.dart';
 import 'package:agenix/src/memory/data/conversation.dart';
-import 'package:agenix/src/memory/data_sources/firebase.dart';
+import 'package:agenix/src/memory/data_sources/_firebase.dart';
 
 abstract class DataStore {
   // This is the abstract method to save the data, it should be implemented by the concrete class

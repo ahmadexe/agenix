@@ -1,7 +1,7 @@
 // All LLM classes should implement this interface
 // This allows for easy swapping of LLMs (e.g., Gemini, Claude, etc.) without changing the core logic of the agent's memory management.
 
-import 'package:agenix/src/llm/gemini.dart';
+import 'package:agenix/src/llm/_gemini.dart';
 
 abstract class LLM {
   Future<String> generate({required String prompt});

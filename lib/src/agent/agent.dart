@@ -88,23 +88,11 @@ class Agent {
 
       final toolResponses = await _toolRunner.runTools(parsed);
 
-      String response = toolResponses
-          .map((r) => r.values.first.toString())
-          .join("\n");
-      if (response.isEmpty) {
-        response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
-        final botMessage = AgentMessage(
-          content: response,
-          isFromAgent: true,
-          generatedAt: DateTime.now(),
-        );
-        _memoryManager.saveMessage(convoId, botMessage);
-        return botMessage;
-      }
-      final queryResponse =
-          "This is the infromation I can find for your query\n$response";
+      // TODO: Add support for tool chaining, right now we are just joining the messages. 
+      String response = toolResponses.map((r) => r.message).join('\n');
+      
       final botMessage = AgentMessage(
-        content: queryResponse,
+        content: response.isEmpty ? kLLMResponseOnFailure : response,
         isFromAgent: true,
         generatedAt: DateTime.now(),
       );
