@@ -92,13 +92,21 @@ class NewsTool extends Tool {
   NewsTool({required super.name, required super.description});
 
   @override
-  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
     // Simulate a network call
     await Future.delayed(const Duration(seconds: 2));
-    return {
-      'title': 'Breaking News',
-      'description': 'This is a sample news description.',
+    final apiResponse = {
+      'headline': 'Flutter is Awesome!',
+      'details': 'Flutter 3.0 has been released with amazing features.',
     };
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message:
+          'Breaking News: ${apiResponse['headline']}. \n${apiResponse['details']}',
+      data:
+          apiResponse, // The data field is optional you can return data if it is required.
+    );
   }
 }
 
@@ -110,13 +118,17 @@ class WeatherTool extends Tool {
   });
 
   @override
-  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
     // Simulate a network call
     await Future.delayed(const Duration(seconds: 2));
-    return {
-      'temperature': '25°C',
-      'condition': 'Sunny',
-      'location': params['location'],
-    };
+    final apiResponse = {'temperature': 25, 'condition': 'Sunny'};
+    final location = params['location'] as String;
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message:
+          'The weather in $location is ${apiResponse['condition']} with a temperature of ${apiResponse['temperature']}°C.',
+    );
   }
 }
