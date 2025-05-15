@@ -61,6 +61,64 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ],
       ),
     );
+
+    ToolRegistry().registerTool(
+      JobsTool(
+        name: 'jobs_tool',
+        description:
+            'This tool should be used if the user asks to post a job',
+        parameters: [
+          ParameterSpecification(
+            name: 'jobTitle',
+            type: 'String',
+            description: 'The job title for which to get job postings.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'location',
+            type: 'String',
+            description: 'The location for which to get job postings.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'company',
+            type: 'String',
+            description: 'The company for which to get job postings.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'salary',
+            type: 'String',
+            description: 'The salary for which to get job postings.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'experience',
+            type: 'String',
+            description: 'The experience for which to get job postings.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'skills',
+            type: 'String',
+            description: 'The skills for which to get job postings.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'description',
+            type: 'String',
+            description: 'The description for which to get job postings.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'type',
+            type: 'String',
+            description: 'The type for which to get job postings.',
+            required: true,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -190,6 +248,39 @@ class HelloTool extends Tool {
       toolName: name,
       isRequestSuccessful: true,
       message: 'Hello ${userName ?? 'User'} from the HelloTool!',
+    );
+  }
+}
+
+class JobsTool extends Tool {
+  JobsTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+    final payload = {
+      'jobTitle': params['jobTitle'] as String,
+      'location': params['location'] as String,
+      'company': params['company'] as String,
+      'salary': params['salary'] as String,
+      'experience': params['experience'] as String,
+      'skills': params['skills'] as String,
+      'description': params['description'] as String,
+      'type': params['type'] as String,
+    };
+
+    debugPrint(payload.toString());
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Job posted successfully!',
+      data: payload, // The data field is optional you can return data if it is required.
     );
   }
 }

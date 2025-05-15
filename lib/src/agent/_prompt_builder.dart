@@ -51,15 +51,17 @@ class _PromptBuilder {
     }
     Output if parameters are required but are not given:
     {
-      "tools": "<tool_name>, <tool2_name>, ...",
-      "parameters": {
-        "<tool_name>": {
-          "<param_name>": "<param_value>",
-          ...
+    "response": "<response: asking for the parameters>",
+    "tools": "<tool_name>, <tool2_name>, ...",
+    "parameters": {
+    "<tool_name>": {
+      "<param_name>": "<param_value>",
+      "<param_name2>": "<param_value2>"
         },
-        ...
-      },
-      "response": "<reponse: asking for the parameters>"
+    "<tool2_name>": {
+      "<param_name>": "<param_value>"
+        }
+      }
     }
     Output format if no tools are available for the prompt:
     {
@@ -72,7 +74,7 @@ class _PromptBuilder {
     );
 
     buffer.writeln(
-      "${"\nBased on the system instruction, chat history, and tools, generate a response for the user. If a tool should be used for the response, include the tool name in the response. If multiple tools need to be used in order, include the name of multiple tools, seperated by commas, make sure the names are included in the correct order, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. Give the response strictly in JSON, do not add anything extra to the response, just the parsable JSON. Do not include any text outside of the JSON. Order of action should be as follows: 1. Check all the available tools. \n2. If a tool or tools are found to respond to the prompt then output them in the provided JSON format. \n3. If no tool is available for the prompt, generate the response yourself. \nThis is the prompt: "}: ${userMessage.content}",
+      "${"\nBased on the system instruction, chat history, and tools, generate a response for the user. If a tool should be used for the response, include the tool name in the response. If multiple tools need to be used in order, include the name of multiple tools, seperated by commas, make sure the names are included in the correct order, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. Give the response strictly in JSON, do not add anything extra to the response, just the parsable JSON. Do not include any text outside of the JSON. Order of action should be as follows: 1. Check all the available tools. \n2. If a tool or tools are found to respond to the prompt then output them in the provided JSON format. \n3. If no tool is available for the prompt, generate the response yourself. If a tool has a parameter that is required, deduce it from the given information and the prompt. If a parameters can not be deduced, ask the user to provide that paramter \nThis is the prompt: "}: ${userMessage.content}",
     );
 
     return buffer.toString().trim();
