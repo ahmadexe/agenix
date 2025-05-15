@@ -38,6 +38,9 @@ dependencies:
 
 
   firebase_auth: ^5.3.4
+  image_picker: ^1.0.7
+  google_generative_ai: ^0.4.7
+
   agenix: 
     path: ../../
 
