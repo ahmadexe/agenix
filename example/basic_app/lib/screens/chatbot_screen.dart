@@ -28,11 +28,26 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         description:
             'This tool should be used if the user asks for the weather.',
         parameters: [
-          ParamSpec(
+          ParameterSpecification(
             name: 'location',
             type: 'String',
             description: 'The location for which to get the weather.',
             required: true,
+          ),
+        ],
+      ),
+    );
+
+    ToolRegistry().registerTool(
+      HelloTool(
+        name: 'hello_tool',
+        description: 'This tool should be used if the user asks for hello, or any sort of greeting.',
+        parameters: [
+          ParameterSpecification(
+            name: 'userName',
+            type: 'String',
+            description: 'The user name that the agent should use to greet the user.',
+            required: false,
           ),
         ],
       ),
@@ -129,6 +144,23 @@ class WeatherTool extends Tool {
       isRequestSuccessful: true,
       message:
           'The weather in $location is ${apiResponse['condition']} with a temperature of ${apiResponse['temperature']}°C.',
+    );
+  }
+}
+
+class HelloTool extends Tool {
+  HelloTool({required super.name, required super.description, required super.parameters});
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+    final userName = params['userName'] as String?;
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Hello ${userName ?? 'User'} from the HelloTool!',
     );
   }
 }

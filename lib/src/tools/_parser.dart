@@ -48,7 +48,7 @@ class PromptParser {
           rawParams is Map<String, dynamic> ? rawParams : {};
 
       final Map<String, Map<String, dynamic>> params = {
-        for (var tool in tools)
+        for (String tool in tools)
           tool: Map<String, dynamic>.from(rawParamsMap[tool] ?? {}),
       };
 
