@@ -9,7 +9,7 @@ import 'package:agenix/src/tools/tool_response.dart';
 abstract class Tool {
   final String name;
   final String description;
-  final List<ParamSpec?>? parameters;
+  final List<ParameterSpecification?>? parameters;
 
   Tool({required this.name, required this.description, this.parameters});
 

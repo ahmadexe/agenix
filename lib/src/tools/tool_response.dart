@@ -1,11 +1,25 @@
+// Responses from tools are used to communicate the results of a tool's operation.
+// They contain information about the tool that generated the response, whether the request was successful, and any data returned by the tool.
+// This class is used to encapsulate the response from a tool, making it easier to handle and process the results.
+// The ToolResponse class is used to represent the response from a tool.
+
+
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
 class ToolResponse {
+  // The name of the tool that generated this response.
   final String toolName;
+
+  // Indicates whether the request to the tool was successful.
+  // This is useful for error handling and debugging, is request fails add a personalized message to the user.
   final bool isRequestSuccessful;
+
+  // This is the message the end user will see, if the tools fetches some data, add the info here or success or failure messages based on the request.
   final String message;
+
+  // Optional data returned by the tool. This will be used for chaining responses in later versios.
   final Map<String, dynamic>? data;
   ToolResponse({
     required this.toolName,
