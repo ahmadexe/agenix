@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:agenix/agenix.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -11,6 +14,10 @@ class ChatbotScreen extends StatefulWidget {
 class _ChatbotScreenState extends State<ChatbotScreen> {
   bool _isLoading = false;
   String _response = 'Awaiting for response...';
+
+  // Image Data
+  XFile? media;
+  Uint8List? imageData;
 
   @override
   void initState() {
@@ -66,6 +73,22 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         child: Column(
           children: [
             TextField(controller: controller),
+            ElevatedButton(
+              onPressed: () async {
+                final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  setState(() {
+                    media = image;
+                  });
+                }
+
+                final Uint8List data = await image!.readAsBytes();
+                setState(() {
+                  imageData = data;
+                });
+              },
+              child: Text('Add Image'),
+            ),
             const SizedBox(height: 16),
             !_isLoading
                 ? ElevatedButton(
@@ -75,8 +98,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       content: userMessageRaw,
                       generatedAt: DateTime.now(),
                       isFromAgent: false,
-                      imageUrl: null,
-                      imageData: null,
+                      imageData: imageData,
                     );
                     setState(() {
                       _isLoading = true;
@@ -85,6 +107,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     final res = await Agent().generateResponse(
                       convoId: '1',
                       userMessage: userMessage,
+                      
                     );
 
                     setState(() {
