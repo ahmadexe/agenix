@@ -41,12 +41,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     ToolRegistry().registerTool(
       HelloTool(
         name: 'hello_tool',
-        description: 'This tool should be used if the user asks for hello, or any sort of greeting.',
+        description:
+            'This tool should be used if the user asks for hello, or any sort of greeting.',
         parameters: [
           ParameterSpecification(
             name: 'userName',
             type: 'String',
-            description: 'The user name that the agent should use to greet the user.',
+            description:
+                'The user name that the agent should use to greet the user.',
             required: false,
           ),
         ],
@@ -149,7 +151,11 @@ class WeatherTool extends Tool {
 }
 
 class HelloTool extends Tool {
-  HelloTool({required super.name, required super.description, required super.parameters});
+  HelloTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
 
   @override
   Future<ToolResponse> run(Map<String, dynamic> params) async {
