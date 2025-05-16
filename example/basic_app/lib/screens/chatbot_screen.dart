@@ -352,12 +352,11 @@ class CreatePostsTool extends Tool {
       'createdAt': DateTime.now().toString(),
     };
 
-    print(payload);
-
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
       message: 'Post created successfully',
+      data: payload, // The data field is optional you can return data if it is required.
     );
   }
 }

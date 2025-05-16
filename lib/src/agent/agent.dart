@@ -76,7 +76,6 @@ class Agent {
       
 
       final String rawLLMResponse = await llm.generate(prompt: prompt, rawData: userMessage.imageData);
-      print(rawLLMResponse);
       final parsed = _promptParser.parse(rawLLMResponse);
       if (parsed.toolNames.isEmpty) {
         final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
