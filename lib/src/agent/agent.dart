@@ -73,8 +73,6 @@ class Agent {
         userMessage: userMessage,
       );
 
-      
-
       final String rawLLMResponse = await llm.generate(prompt: prompt, rawData: userMessage.imageData);
       final parsed = _promptParser.parse(rawLLMResponse);
       if (parsed.toolNames.isEmpty) {
