@@ -26,6 +26,7 @@ class Gemini extends LLM {
       final response = await _model.generateContent([Content.text(prompt)]);
       return response.text ?? kLLMResponseOnFailure;
     } else {
+      print(rawData.length);
       final DataPart dataPart = DataPart('image/jpeg', rawData);
       final text = TextPart(prompt);
       final response = await _model.generateContent([
