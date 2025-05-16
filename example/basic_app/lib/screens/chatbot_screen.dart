@@ -65,8 +65,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     ToolRegistry().registerTool(
       JobsTool(
         name: 'jobs_tool',
-        description:
-            'This tool should be used if the user asks to post a job',
+        description: 'This tool should be used if the user asks to post a job',
         parameters: [
           ParameterSpecification(
             name: 'jobTitle',
@@ -119,6 +118,53 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ],
       ),
     );
+
+    ToolRegistry().registerTool(
+      CreatePostsTool(
+        name: 'create_posts_tool',
+        description:
+            'This tool should be used if the user asks to create a post',
+        parameters: [
+          ParameterSpecification(
+            name: 'title',
+            type: 'String',
+            description: 'The title of the post.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'description',
+            type: 'String',
+            description: 'The description of the post.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'userId',
+            type: 'String',
+            description: 'The user ID of the post creator.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'category',
+            type: 'String',
+            description: 'The category of the post.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'userName',
+            type: 'String',
+            description: 'The user name of the post creator.',
+            required: true,
+          ),
+          ParameterSpecification(
+            name: 'userProfilePic',
+            type: 'String',
+            description:
+                'The profile picture URL of the post creator.',
+            required: false,
+          ),
+        ]
+      ),
+    );
   }
 
   @override
@@ -133,7 +179,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             TextField(controller: controller),
             ElevatedButton(
               onPressed: () async {
-                final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+                final image = await ImagePicker().pickImage(
+                  source: ImageSource.gallery,
+                );
                 if (image != null) {
                   setState(() {
                     media = image;
@@ -165,7 +213,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     final res = await Agent().generateResponse(
                       convoId: '1',
                       userMessage: userMessage,
-                      
                     );
 
                     setState(() {
@@ -280,7 +327,37 @@ class JobsTool extends Tool {
       toolName: name,
       isRequestSuccessful: true,
       message: 'Job posted successfully!',
-      data: payload, // The data field is optional you can return data if it is required.
+      data:
+          payload, // The data field is optional you can return data if it is required.
+    );
+  }
+}
+
+class CreatePostsTool extends Tool {
+  CreatePostsTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    final payload = {
+      'title': params['title'] as String,
+      'description': params['description'] as String,
+      'userId': params['userId'] as String,
+      'category': params['category'] as String,
+      'userName': params['userName'] as String,
+      'userProfilePic': params['userProfilePic'] as String,
+      'createdAt': DateTime.now().toString(),
+    };
+
+    print(payload);
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Post created successfully',
     );
   }
 }
