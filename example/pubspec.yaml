@@ -42,7 +42,7 @@ dependencies:
   google_generative_ai: ^0.4.7
 
   agenix: 
-    path: ../../
+    path: ../
 
 dev_dependencies:
   flutter_test:

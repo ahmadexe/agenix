@@ -12,7 +12,7 @@ packages:
   agenix:
     dependency: "direct main"
     description:
-      path: "../.."
+      path: ".."
       relative: true
     source: path
     version: "2.0.0"

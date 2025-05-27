@@ -30,7 +30,11 @@ class Agent {
 
   /// Initialize the agent with a data store and LLM, and load the system data.
   /// In the system data you can define the personality of the agent, the name of the agent, and anything else that comes to mind.
-  Future<void> init({required DataStore dataStore, required LLM llm}) async {
+  Future<void> init({
+    required DataStore dataStore,
+    required LLM llm,
+    String? pathToSystemData,
+  }) async {
     if (_isInitialized) {
       throw Exception('Agent is already initialized');
     }
@@ -40,8 +44,8 @@ class Agent {
       _memoryManager = _MemoryManager(dataStore: dataStore);
       this.llm = llm;
 
-      String jsonString = await rootBundle.loadString(
-        'assets/system_data.json',
+      final String jsonString = await rootBundle.loadString(
+        pathToSystemData ?? 'assets/system_data.json',
       );
       final raw = json.decode(jsonString);
       _promptBuilder = _PromptBuilder(systemPrompt: raw);
