@@ -158,11 +158,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ParameterSpecification(
             name: 'userProfilePic',
             type: 'String',
-            description:
-                'The profile picture URL of the post creator.',
+            description: 'The profile picture URL of the post creator.',
             required: false,
           ),
-        ]
+        ],
       ),
     );
   }
@@ -356,7 +355,8 @@ class CreatePostsTool extends Tool {
       toolName: name,
       isRequestSuccessful: true,
       message: 'Post created successfully',
-      data: payload, // The data field is optional you can return data if it is required.
+      data:
+          payload, // The data field is optional you can return data if it is required.
     );
   }
 }

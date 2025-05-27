@@ -7,19 +7,22 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+/// Represents the response from a tool executed by the agent.
 class ToolResponse {
-  // The name of the tool that generated this response.
+  /// The name of the tool that generated this response.
   final String toolName;
 
-  // Indicates whether the request to the tool was successful.
-  // This is useful for error handling and debugging, is request fails add a personalized message to the user.
+  /// Indicates whether the request to the tool was successful.
+  /// This is useful for error handling and debugging, is request fails add a personalized message to the user.
   final bool isRequestSuccessful;
 
-  // This is the message the end user will see, if the tools fetches some data, add the info here or success or failure messages based on the request.
+  /// This is the message the end user will see, if the tools fetches some data, add the info here or success or failure messages based on the request.
   final String message;
 
-  // Optional data returned by the tool. This will be used for chaining responses in later versios.
+  /// Optional data returned by the tool. This will be used for chaining responses in later versios.
   final Map<String, dynamic>? data;
+
+  /// Constructs a ToolResponse with the tool name, success status, message, and optional data.
   ToolResponse({
     required this.toolName,
     required this.isRequestSuccessful,
@@ -27,6 +30,7 @@ class ToolResponse {
     this.data,
   });
 
+  /// Creates a copy of the current ToolResponse with optional new values for each field.
   ToolResponse copyWith({
     String? toolName,
     bool? isRequestSuccessful,
@@ -41,6 +45,7 @@ class ToolResponse {
     );
   }
 
+  /// Converts the ToolResponse object to a map for serialization or database storage.
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'toolName': toolName,
@@ -50,6 +55,7 @@ class ToolResponse {
     };
   }
 
+  /// Constructs a ToolResponse object from a map (usually from Firestore or other storage).
   factory ToolResponse.fromMap(Map<String, dynamic> map) {
     return ToolResponse(
       toolName: map['toolName'] as String,
@@ -59,8 +65,10 @@ class ToolResponse {
     );
   }
 
+  /// Converts the ToolResponse object to a JSON string.
   String toJson() => json.encode(toMap());
 
+  /// Constructs a ToolResponse object from a JSON string.
   factory ToolResponse.fromJson(String source) =>
       ToolResponse.fromMap(json.decode(source) as Map<String, dynamic>);
 

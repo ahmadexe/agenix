@@ -10,6 +10,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 
+/// FirebaseDataStore is an implementation of DataStore that uses Firebase Firestore and Firebase Storage to store and retrieve data.
+/// This allows for easy swapping of data stores without changing the core logic of the agent's memory management.
+/// To use this data store, you need to initialize Firebase in your app and provide the necessary configuration.
 class FirebaseDataStore extends DataStore {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;

@@ -8,14 +8,22 @@ import 'dart:typed_data';
 /// Represents a message in a conversation, either from the agent or the user.
 /// It can optionally contain an image (as binary data or a URL).
 class AgentMessage {
-  final String content; // The main text content of the message
-  final DateTime generatedAt; // Timestamp when the message was generated
-  final bool
-  isFromAgent; // Indicates whether the message is from the agent (true) or user (false)
-  final Uint8List?
-  imageData; // Optional binary image data (e.g., for displaying inline)
-  final String? imageUrl; // Optional URL to an image
+  /// The main text content of the message
+  final String content;
 
+  /// Timestamp when the message was generated
+  final DateTime generatedAt;
+
+  /// Indicates whether the message is from the agent (true) or user (false)
+  final bool isFromAgent;
+
+  /// Optional binary image data (e.g., for displaying inline)
+  final Uint8List? imageData;
+
+  /// Optional URL to an image
+  final String? imageUrl;
+
+  /// Constructs an AgentMessage with required content and generatedAt,
   AgentMessage({
     required this.content,
     required this.generatedAt,

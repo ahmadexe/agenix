@@ -1,16 +1,21 @@
 import 'dart:convert';
 
-// The parser is responsible for interpreting the output from the LLM.
-// The output is in JSON format and can contain either a response or a list of tools to be executed.
-// The parser will extract the tool names and parameters from the JSON output.
-// It will also handle the case where the LLM asks for parameters to be provided.
-// The parser will throw an exception if the output is not in the expected format.
-
+/// The parser is responsible for interpreting the output from the LLM.
+/// The output is in JSON format and can contain either a response or a list of tools to be executed.
+/// The parser will extract the tool names and parameters from the JSON output.
+/// It will also handle the case where the LLM asks for parameters to be provided.
+/// The parser will throw an exception if the output is not in the expected format.
 class PromptParserResult {
+  /// toolNames is a list of names of tools that the LLM has requested to execute.
   final List<String> toolNames;
+
+  /// params is a map of tool names to their parameters, some tools may not have parameters.
   final Map<String, Map<String, dynamic>> params;
+
+  /// fallbackResponse is an optional response that the LLM has provided, if fallback response is provided, it will be used instead of executing tools.
   final String? fallbackResponse;
 
+  /// Constructs a PromptParserResult with the tool names, parameters, and an optional fallback response.
   PromptParserResult({
     required this.toolNames,
     required this.params,
@@ -20,6 +25,7 @@ class PromptParserResult {
 
 /// The PromptParser class is responsible for parsing the output from the LLM.
 class PromptParser {
+  /// Parses the LLM output JSON string and returns a PromptParserResult.
   PromptParserResult parse(String llmOutputJson) {
     final data = llmOutputJson.trim();
     final Map<String, dynamic> parsed = _tryJsonDecode(data);
