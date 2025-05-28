@@ -6,6 +6,7 @@
 <p align="center">
 <a href="https://github.com/ahmadexe/agenix"><img src="https://img.shields.io/github/stars/ahmadexe/agenix.svg?style=flat&logo=github&colorB=deeppink&label=stars" alt="Star on Github"></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
+<a href="https://pub.dev/packages/agenix"><img src="https://img.shields.io/pub/v/agenix.svg" alt="Pub Dev"></a>
 </p>
 
 ---
