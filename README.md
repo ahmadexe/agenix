@@ -7,6 +7,7 @@
 <a href="https://github.com/ahmadexe/agenix"><img src="https://img.shields.io/github/stars/ahmadexe/agenix.svg?style=flat&logo=github&colorB=deeppink&label=stars" alt="Star on Github"></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
 <a href="https://pub.dev/packages/agenix"><img src="https://img.shields.io/pub/v/agenix.svg" alt="Pub Dev"></a>
+<a href="https://pub.dev/packages/agenix"><img src="https://img.shields.io/badge/platform-Flutter%20%7C%20Dart-blue" alt="Platform"></a>
 </p>
 
 ---
@@ -43,7 +44,7 @@ final agent = Agent();
 agent.init(
     dataStore: YourDataStore(),
     llm: YourLLM(),
-);Ï
+);
 ```
 
 If you want to use Firebase Firestore as your DataStore, and Gemini as your LLM, you can do something like this:
@@ -56,7 +57,7 @@ agent.init(
 );
 ```
 
-To get the key run using:
+Run and define your key:
 ```
 flutter run -d chrome --dart-define=GEMINI_API_KEY=Your-Gemini-Key
 ```
