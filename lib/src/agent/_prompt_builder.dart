@@ -5,8 +5,9 @@ part of 'agent.dart';
 ///
 class _PromptBuilder {
   final Map<String, dynamic> systemPrompt;
+  final ToolRegistry registry;
 
-  _PromptBuilder({required this.systemPrompt});
+  _PromptBuilder({required this.systemPrompt, required this.registry});
 
   String buildTextPrompt({
     List<AgentMessage>? memoryMessages,
@@ -27,7 +28,7 @@ class _PromptBuilder {
       }
     }
 
-    final tools = ToolRegistry().getAllTools();
+    final tools = registry.getAllTools();
     if (tools.isNotEmpty) {
       buffer.writeln("Tools: ");
       for (final tool in tools) {
