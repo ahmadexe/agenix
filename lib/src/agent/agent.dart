@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 part '_memory_manager.dart';
 part '_prompt_builder.dart';
+part '_agent_registry.dart';
 
 /// Agent is the main class that represents the AI agent.
 /// Define the agent with all background knowledge and tools.
@@ -23,11 +24,19 @@ class Agent {
   /// The LLM that powers the agent, you can use a pre-built model like Gemini or if you have a custom implementation running on the server, you can use that.
   final LLM llm;
 
+  /// This is the name of your agent, it is used to identify the agent in the conversation.
+  final String name;
+
+  /// This is the role of your agent, make it very descriptive because based on the description provided in role agents will be able to communicate with each other.
+  final String role;
+
   Agent._internal({
     required this.llm,
     required _MemoryManager memoryManager,
     required _PromptBuilder promptBuilder,
     required this.toolRegistry,
+    required this.name,
+    required this.role,
   }) : _memoryManager = memoryManager,
        _promptBuilder = promptBuilder;
 
@@ -35,11 +44,13 @@ class Agent {
   static Future<Agent> create({
     required DataStore dataStore,
     required LLM llm,
+    required String name,
+    required String role,
     String pathToSystemData = 'assets/system_data.json',
   }) async {
     final systemData = await _loadSystemData(pathToSystemData);
     final registry = ToolRegistry();
-    return Agent._internal(
+    final agent = Agent._internal(
       llm: llm,
       memoryManager: _MemoryManager(dataStore: dataStore),
       promptBuilder: _PromptBuilder(
@@ -47,7 +58,12 @@ class Agent {
         registry: registry,
       ),
       toolRegistry: registry,
+      name: name,
+      role: role,
     );
+
+    _AgentRegistry.instance.registerTool(agent);
+    return agent;
   }
 
   static Future<Map<String, dynamic>> _loadSystemData(String path) async {
