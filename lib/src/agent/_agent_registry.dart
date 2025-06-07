@@ -17,24 +17,27 @@ class _AgentRegistry {
   /// This method should be called whenever developers make a new tool.
   /// It registers the tool in the registry.
   /// If you miss this step, the tool won't be available for use.
-  void registerTool(Agent agent) {
+  void registerAgent(Agent agent) {
+    if (hasAgent(agent.name)) {
+      throw Exception('Agent with name ${agent.name} already exists. Do not register the same agent twice. Use a different name.');
+    }
     _agents[agent.name] = agent;
   }
 
   /// This method gets an agent by its name.
   /// It is used by the agent to find other agents if required
-  Agent? getTool(String agentName) {
+  Agent? getAgent(String agentName) {
     return _agents[agentName];
   }
 
   /// This method gets all the agents in the registry.
   /// It is used by prompt builders to list all available tools.
-  List<Agent> getAllTools() {
+  List<Agent> getAllAgents() {
     return _agents.values.toList();
   }
 
   /// This method checks if an agent is registered in the registry.
-  bool hasTool(String toolName) {
+  bool hasAgent(String toolName) {
     return _agents.containsKey(toolName);
   }
 }

@@ -62,7 +62,7 @@ class Agent {
       role: role,
     );
 
-    _AgentRegistry.instance.registerTool(agent);
+    _AgentRegistry.instance.registerAgent(agent);
     return agent;
   }
 

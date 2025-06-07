@@ -11,6 +11,11 @@ class ToolRegistry {
   /// It registers the tool in the registry.
   /// If you miss this step, the tool won't be available for use.
   void registerTool(Tool tool) {
+    if (hasTool(tool.name)) {
+      throw Exception(
+        'Tool with name ${tool.name} already exists. Do not register the same tool twice. Use a different name.',
+      );
+    }
     _tools[tool.name] = tool;
   }
 
