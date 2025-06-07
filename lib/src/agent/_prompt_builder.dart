@@ -43,7 +43,7 @@ class _PromptBuilder {
     {
       "response": "<response>"
     }
-     Output if parameters are required for the tool but are not given:
+    Output if parameters are required for the tool but are not given:
     {
     "response": "Please provide <param_name1>, <param_name2>, ...",
     "tools": "<tool_name>",
