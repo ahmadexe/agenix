@@ -5,6 +5,7 @@ import 'package:agenix/src/tools/_parser.dart';
 import 'package:agenix/src/tools/_tool_runner.dart';
 import 'package:agenix/src/tools/tool_registry.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 part '_memory_manager.dart';
 part '_prompt_builder.dart';
@@ -100,6 +101,8 @@ class Agent {
         rawData: userMessage.imageData,
       );
 
+      debugPrint(rawLLMResponse);
+
       final parsed = _promptParser.parse(rawLLMResponse);
 
       if (parsed.toolNames.isEmpty) {
@@ -164,4 +167,7 @@ class Agent {
       metaData: metaData,
     );
   }
+
+  @override
+  String toString() => 'Agent(name: $name, role: $role)';
 }

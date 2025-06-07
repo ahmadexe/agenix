@@ -49,8 +49,25 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     agent = await Agent.create(
       dataStore: DataStore.firestoreDataStore(),
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
-      name: 'All Purpose Agent',
-      role: 'Everything is handled by this agent',
+      name: 'Data Finding Agent',
+      role: 'This agent is used to gather and find large amounts of data.',
+      pathToSystemData: 'assets/agent1.json',
+    );
+
+    final agent2 = await Agent.create(
+      dataStore: DataStore.firestoreDataStore(),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      name: 'Statistic Agent',
+      role: 'These agent analyzes data using statistics, whenever large amount of data is needed to be analyzed this agent should be used.',
+      pathToSystemData: 'assets/agent2.json',
+    );
+
+    final agent3 = await Agent.create(
+      dataStore: DataStore.firestoreDataStore(),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      name: 'Writer Agent',
+      role: 'This agent is used to write articles and blog posts.',
+      pathToSystemData: 'assets/agent3.json',
     );
 
     agent.toolRegistry.registerTool(
