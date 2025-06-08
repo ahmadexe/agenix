@@ -84,8 +84,9 @@ class _PromptBuilder {
     buffer.writeln('''
         RULE TO USE TOOLS:
         If a tool should be used and parameters are not provided in data, check if 'Provided Data' is available.
-        If yes, use it to extract parameters. Only if a required parameter is completely missing from both the prompt AND the provided data, ask the user for it.
-        NEVER ask the user if 'Provided Data' already has enough information. Do not mention the tool name in the response.
+        If yes, use it to extract parameters. Only if a required parameter is completely missing from both the prompt AND the provided data, ask the user for it, also explain why you need it.
+        NEVER ask the user if 'Provided Data' already has enough information. Do not mention the tool name in the response. 
+        Ask the user to provide the required parameters in "response" field of the JSON output. Do not ask for other information in any other field.
       ''');
 
     // Instructions about how to use agents
@@ -96,7 +97,7 @@ class _PromptBuilder {
     }
 
     buffer.writeln(
-      "${"\nBased on the system instruction, chat history, tools and agents in the system, generate a response for the user. If a tool should be used for the response, include the tool name in the response, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. If agents should be used, output a chain of agents in the logical sequence. Give the response strictly in JSON, do not add anything extra to the response, just the parsable JSON. Do not include any text outside of the JSON. Order of action should be as follows: 1. Check all the available tools. \n2. If a tool or tools are found to respond to the prompt then output them in the provided JSON format. \n3. If a tool has a parameter that is required, deduce it from the given information and the prompt. If a parameters can not be deduced, ask the user to provide that paramter in the response field of the JSON. ONLY ASK FOR PARAMETERS IF THEY ARE REQUIRED, IF A PARAMETER IS NOT REQUIRED, DO NOT ASK FOR IT. DO NOT MENTION THE NAME OF THE TOOL IN THE RESPONSE, THEY ARE ONLY FOR INTERNAL USE"}\n",
+      "${"\nBased on the system instruction, chat history, tools and agents in the system, generate a response for the user. If a tool should be used for the response, include the tool name in the response, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. If agents should be used, output a chain of agents in the logical sequence. Give the response strictly in JSON, do not add anything extra to the response, just the parsable JSON. Do not include any text outside of the JSON. Order of action should be as follows: 1. Check all the available tools. \n2. If a tool or tools are found to respond to the prompt then output them in the provided JSON format. \n3. If a tool has a parameter that is required, deduce it from the given information and the prompt. If a parameters can not be deduced, ask the user to provide that paramter in the response field of the JSON. ONLY ASK FOR PARAMETERS IF THEY ARE REQUIRED, IF A PARAMETER IS NOT REQUIRED, DO NOT ASK FOR IT. DO NOT MENTION THE NAME OF THE TOOL, ONLY ASK FOR THE PARAMETER IN THE RESPONSE. Use the response field of the JSON to output the response or if you need additional information like a REQUIRED PARAMETER that can not be deduced. Hold a normal conversation and explain why you are asking for the parameter."}\n",
     );
 
     // If data is provided as input from some previous execution in the chain, add it to the prompt
