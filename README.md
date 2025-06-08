@@ -142,7 +142,7 @@ ToolRegistry().registerTool(
 Once a tool is defined Agenix is capable enough to hit them when required, deduce the parameters from the input, or ask for the parameters if they are required. If your tool fails to perform the intended task, you can try adding a more defined description.
 
 ## Examples
-To view full feldg examples, please take a look inside the example directory!
+To view full felde examples, please take a look inside the example directory!
 
 ## Maintainers
 

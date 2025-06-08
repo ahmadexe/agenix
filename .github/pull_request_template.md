@@ -14,4 +14,4 @@
 
 ## Issue Linked to the PR
 
-## Aditional Information
+## Additional Information
