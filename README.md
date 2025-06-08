@@ -3,6 +3,7 @@
 
 # Agenix
 
+
 <p align="center">
 <a href="https://github.com/ahmadexe/agenix"><img src="https://img.shields.io/github/stars/ahmadexe/agenix.svg?style=flat&logo=github&colorB=deeppink&label=stars" alt="Star on Github"></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
@@ -16,9 +17,10 @@ A framework to build agentic apps using Flutter & Dart!
 
 ---
 
-## Overview
 
+## Overview
 Agenix aims at providing an easy interface to build Agentic apps using Flutter and Dart. It comes with various Datastores to store your messages, various LLMs to act as the base of your agentic app. Just define the data of your Agentic app, your tools and you are good to go!
+
 
 ## Components
 Agenix allows users to build agentic apps, there are some key components that users should be familiar with before using Agenix.
@@ -27,6 +29,7 @@ Agenix allows users to build agentic apps, there are some key components that us
 3. LLM: A large language model to support the agent. You can use a pre-built model like Gemini or if you have a custom implementation running on the server, you can use that.
 4. Tools: Tools are elements that do the work for the agent, if you want the agent to fetch news? Make and register a tool to fetch news from the internet.
 5. Tool Registry: Whatever tool you have, don't forget to add them to the registry!
+
 
 ## How to Use?
 
@@ -62,6 +65,7 @@ Run and define your key:
 flutter run -d chrome --dart-define=GEMINI_API_KEY=Your-Gemini-Key
 ```
 
+
 ### Generating Response
 To get a response from the Agent, call the agent.generateResponse method.
 ```
@@ -70,6 +74,7 @@ final res = await Agent().generateResponse(
     userMessage: userMessage,
 );
 ```
+
 
 ### Building a tool
 The Agent will be capable enough to maintain context using previous messages in a conversation, understand and intelligently respond to user's prompt, but to perform any specific action, like hit an API endpoint, or run a database query, you will need to build and register tools.
@@ -141,10 +146,12 @@ ToolRegistry().registerTool(
 
 Once a tool is defined Agenix is capable enough to hit them when required, deduce the parameters from the input, or ask for the parameters if they are required. If your tool fails to perform the intended task, you can try adding a more defined description.
 
+
 ## Examples
 1. [Example of Multi Agent Systems Built Using Agenix](https://github.com/ahmadexe/agenix-examples/tree/main/multi_agent_system)
 2. [Basic usage of Agenix](https://github.com/ahmadexe/agenix/tree/main/example)
+3. [Using Agenix with Custom Data Store](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example)
+
 
 ## Maintainers
-
 - [Muhammad Ahmad](https://github.com/ahmadexe)
