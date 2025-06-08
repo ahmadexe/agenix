@@ -3,8 +3,8 @@
 // INTERNAL: Changes here affect prompt structure and downstream LLM behaviors.
 // Use extreme caution when modifying rules, formats, or instruction wording.
 
-
 part of 'agent.dart';
+
 class _PromptBuilder {
   final Map<String, dynamic> systemPrompt;
   final ToolRegistry registry;

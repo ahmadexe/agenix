@@ -49,7 +49,8 @@ class ToolResponse {
       isRequestSuccessful: isRequestSuccessful ?? this.isRequestSuccessful,
       message: message ?? this.message,
       data: data ?? this.data,
-      needsFurtherReasoning: needsFurtherReasoning ?? this.needsFurtherReasoning,
+      needsFurtherReasoning:
+          needsFurtherReasoning ?? this.needsFurtherReasoning,
     );
   }
 
@@ -93,7 +94,6 @@ class ToolResponse {
         other.isRequestSuccessful == isRequestSuccessful &&
         other.message == message &&
         other.needsFurtherReasoning == needsFurtherReasoning &&
-
         mapEquals(other.data, data);
   }
 

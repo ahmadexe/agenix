@@ -19,7 +19,9 @@ class _AgentRegistry {
   /// If you miss this step, the tool won't be available for use.
   void registerAgent(Agent agent) {
     if (hasAgent(agent.name)) {
-      throw Exception('Agent with name ${agent.name} already exists. Do not register the same agent twice. Use a different name.');
+      throw Exception(
+        'Agent with name ${agent.name} already exists. Do not register the same agent twice. Use a different name.',
+      );
     }
     _agents[agent.name] = agent;
   }

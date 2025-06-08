@@ -7,7 +7,10 @@ import 'package:agenix/src/tools/tool_registry.dart';
 /// The output from each tool is collected and returned as a list of maps.
 class ToolRunner {
   /// Runs the tools based on the parsed result from the PromptParser.
-  Future<List<ToolResponse>> runTools(PromptParserResult result, ToolRegistry registry) async {
+  Future<List<ToolResponse>> runTools(
+    PromptParserResult result,
+    ToolRegistry registry,
+  ) async {
     final List<ToolResponse> responses = [];
 
     for (final toolName in result.toolNames) {

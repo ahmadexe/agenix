@@ -26,7 +26,6 @@ class AgentMessage {
   /// Optional data associated with the message, this data is for internal use of the application and not for any extrnal use.
   final Map<String, dynamic>? data;
 
-
   /// Constructs an AgentMessage with required content and generatedAt,
   AgentMessage({
     required this.content,
@@ -34,7 +33,7 @@ class AgentMessage {
     required this.isFromAgent,
     this.imageData,
     this.imageUrl,
-    this.data
+    this.data,
   });
 
   /// Creates a copy of the current message with optional new values for each field
@@ -44,7 +43,7 @@ class AgentMessage {
     bool? isFromAgent,
     Uint8List? imageData,
     String? imageUrl,
-    Map<String, dynamic>? data
+    Map<String, dynamic>? data,
   }) {
     return AgentMessage(
       content: content ?? this.content,
@@ -52,7 +51,7 @@ class AgentMessage {
       isFromAgent: isFromAgent ?? this.isFromAgent,
       imageData: imageData ?? this.imageData,
       imageUrl: imageUrl ?? this.imageUrl,
-      data: data ?? this.data
+      data: data ?? this.data,
     );
   }
 
@@ -63,7 +62,7 @@ class AgentMessage {
       'generatedAt': generatedAt.millisecondsSinceEpoch,
       'isFromAgent': isFromAgent,
       'imageUrl': imageUrl,
-      'data': data
+      'data': data,
     };
   }
 
@@ -76,7 +75,7 @@ class AgentMessage {
       ),
       isFromAgent: map['isFromAgent'] as bool,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
-      data: map['data'] as Map<String, dynamic>?
+      data: map['data'] as Map<String, dynamic>?,
     );
   }
 
