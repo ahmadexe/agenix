@@ -5,18 +5,27 @@ part of 'agent.dart';
 ///
 class _PromptBuilder {
   final Map<String, dynamic> systemPrompt;
+  final ToolRegistry registry;
 
-  _PromptBuilder({required this.systemPrompt});
+  _PromptBuilder({required this.systemPrompt, required this.registry});
 
   String buildTextPrompt({
     List<AgentMessage>? memoryMessages,
     required AgentMessage userMessage,
+    bool isPartOfChain = false,
+    String? input,
   }) {
     final buffer = StringBuffer();
 
-    buffer.writeln("RETURN THE RESPONSE IN JSON FORMAT ONLY, the ");
+    buffer.writeln("RETURN THE RESPONSE IN JSON FORMAT ONLY");
 
     buffer.writeln("System Instruction: $systemPrompt\n");
+
+    if (!isPartOfChain) {
+      buffer.writeln(
+        "Agents in the System: ${_AgentRegistry.instance.getAllAgents().map((e) => e.toString()).join(", ")}",
+      );
+    }
 
     if (memoryMessages != null && memoryMessages.isNotEmpty) {
       buffer.writeln("Chat History: ");
@@ -27,7 +36,7 @@ class _PromptBuilder {
       }
     }
 
-    final tools = ToolRegistry().getAllTools();
+    final tools = registry.getAllTools();
     if (tools.isNotEmpty) {
       buffer.writeln("Tools: ");
       for (final tool in tools) {
@@ -38,11 +47,11 @@ class _PromptBuilder {
     }
 
     buffer.writeln('''
-    Output format if no tools are available for the prompt:
+    \nOutput format if no tools are available for the prompt:
     {
       "response": "<response>"
     }
-     Output if parameters are required for the tool but are not given:
+    Output if parameters are required for the tool but are not given:
     {
     "response": "Please provide <param_name1>, <param_name2>, ...",
     "tools": "<tool_name>",
@@ -60,13 +69,42 @@ class _PromptBuilder {
     }
     ''');
 
+    if (!isPartOfChain) {
+      buffer.writeln(
+        '''Output format if the user's tasks needs to be handled by multiple agents in the system:
+      {
+        "agents_chain": ["<agent_name1>", "<agent_name2>", ...]"
+      }\n''',
+      );
+    }
+
+    // Instructions about how to use tools
     buffer.writeln(
-      "If a tool should be used and parameters are not provided in data, ask the user to provide them. Ask for the parameters in a single message in the response field. If a required parameter can not be deduced from the prompt, ask the user to provide that parameter in the response field of the JSON.\n",
+      "RULE TO USE TOOLS: If a tool should be used and parameters are not provided in data, ask the user to provide them. Ask for the parameters in a single message in the response field. If a required parameter can not be deduced from the prompt, ask the user to provide that parameter in the response field of the JSON.\n",
     );
 
+    // Instructions about how to use agents
+    if (!isPartOfChain) {
+      buffer.writeln(
+        "RULE TO USE AGENTS: If this tasks should be handled by multiple agents in the system, output a chain of agents in the logical sequence. This will be decided based on the available tools and available agents. If the tools available to you can't completely solve this task and the roles of available agents overlap with some part of the task and the prompt isn't of general nature that can be handled by any LLM/agent, then output the agents that should be used in the chain, in the sequential order of subtask hadnling.\n",
+      );
+    }
+
     buffer.writeln(
-      "${"\nBased on the system instruction, chat history, and tools, generate a response for the user. If a tool should be used for the response, include the tool name in the response. If multiple tools need to be used in order, include the name of multiple tools, seperated by commas, make sure the names are included in the correct order, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. Give the response strictly in JSON, do not add anything extra to the response, just the parsable JSON. Do not include any text outside of the JSON. Order of action should be as follows: 1. Check all the available tools. \n2. If a tool or tools are found to respond to the prompt then output them in the provided JSON format. \n3. If no tool is available for the prompt, generate the response yourself. \n4. If a tool has a parameter that is required, deduce it from the given information and the prompt. If a parameters can not be deduced, ask the user to provide that paramter in the response field of the JSON. \nThis is the prompt: "}: ${userMessage.content}",
+      "${"\nBased on the system instruction, chat history, tools and agents in the system, generate a response for the user. If a tool should be used for the response, include the tool name in the response, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. If agents should be used, output a chain of agents in the logical sequence. Give the response strictly in JSON, do not add anything extra to the response, just the parsable JSON. Do not include any text outside of the JSON. Order of action should be as follows: 1. Check all the available tools. \n2. If a tool or tools are found to respond to the prompt then output them in the provided JSON format. \n3. If a tool has a parameter that is required, deduce it from the given information and the prompt. If a parameters can not be deduced, ask the user to provide that paramter in the response field of the JSON."}\n",
     );
+
+
+    // If data is provided as input from some previous execution in the chain, add it to the prompt
+    if (input != null && input.isNotEmpty && isPartOfChain) {
+      buffer.writeln("Use this data to perform the task, if tools are to be used for the task, find the parameters from this data, if parameters can be extracted from this data, extract them, otherwise DO NOT ASK THE USER FOR THE PARAMETERS, try and solve the task using this only this data and the data already available to you. Data: $input\n");
+    }
+
+    if (!isPartOfChain) {
+      "${"\n4. If this tasks involve multiple agents in the system, output a chain of agents in the logical sequence. \n5. If id does not involve multiple agents in the system, and the task can not be solved completely by the tools available for the prompt, generate the response yourself. \nThis is the prompt: "}: ${userMessage.content}\n";
+    } else {
+      "${"\n4. If no tool is available for the prompt, generate the response yourself. \nThis is the prompt: "}: ${userMessage.content}\n";
+    }
 
     return buffer.toString().trim();
   }

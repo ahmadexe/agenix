@@ -5,19 +5,17 @@ import 'tool.dart';
 /// The ToolRegistry is a singleton class that maintains a map of tool names to tool instances.
 /// It provides methods to register a tool, unregister a tool, get a tool by name, and check if a tool exists.
 class ToolRegistry {
-  static final ToolRegistry _instance = ToolRegistry._internal();
-
-  /// Factory constructor to return the singleton instance of ToolRegistry.
-  factory ToolRegistry() => _instance;
-
   final Map<String, Tool> _tools = {};
-
-  ToolRegistry._internal();
 
   /// This method should be called whenever developers make a new tool.
   /// It registers the tool in the registry.
   /// If you miss this step, the tool won't be available for use.
   void registerTool(Tool tool) {
+    if (hasTool(tool.name)) {
+      throw Exception(
+        'Tool with name ${tool.name} already exists. Do not register the same tool twice. Use a different name.',
+      );
+    }
     _tools[tool.name] = tool;
   }
 

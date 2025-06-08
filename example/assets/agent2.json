@@ -1,0 +1,4 @@
+{
+    "name": "Statistic Agent",
+    "role": "These agent analyzes data using statistics, whenever large amount of data is needed to be analyzed this agent should be used."
+}
