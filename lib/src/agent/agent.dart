@@ -166,11 +166,35 @@ class Agent {
         final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
         final response = toolResponses.map((r) => r.message).join('\n');
 
+        final needsFurtherReasoning = toolResponses.any(
+          (r) => r.needsFurtherReasoning,
+        );
+
+        if (needsFurtherReasoning) {
+          final originalPrompt = userMessage.content;
+          final rawData = toolResponses.map((r) => r.data).join('\n');
+
+          final processedResponse = await _reasonUsingData(
+            originalPrompt,
+            response,
+            rawData,
+          );
+
+          _memoryManager.saveMessage(convoId, processedResponse);
+
+          return processedResponse;
+        }
+
         final botMessage = AgentMessage(
           content: response.isEmpty ? kLLMResponseOnFailure : response,
           isFromAgent: true,
           generatedAt: DateTime.now(),
+          data:
+              toolResponses.isNotEmpty
+                  ? {'tools': toolResponses.map((r) => r.data).toList()}
+                  : null,
         );
+
         _memoryManager.saveMessage(convoId, botMessage);
         return botMessage;
       }
@@ -213,6 +237,24 @@ class Agent {
     return _memoryManager.dataStore.deleteConversation(
       conversationId,
       metaData: metaData,
+    );
+  }
+
+  // The method is executed if further reasoning is required over the responses by the tools
+  Future<AgentMessage> _reasonUsingData(
+    String originalPrompt,
+    String response,
+    String rawData,
+  ) async {
+    final result = await llm.generate(
+      prompt:
+          "Keep the answer to the point but natural, only answer what is asked in the original prompt using this information: $response, and data: $rawData. Original prompt: $originalPrompt",
+    );
+
+    return AgentMessage(
+      content: result,
+      isFromAgent: true,
+      generatedAt: DateTime.now(),
     );
   }
 

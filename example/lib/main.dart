@@ -286,7 +286,7 @@ class NewsTool extends Tool {
     await Future.delayed(const Duration(seconds: 2));
     final apiResponse = {
       'headline': 'Flutter is Awesome!',
-      'details': 'Flutter 3.0 has been released with amazing features.',
+      'details': 'Flutter 3.0 has been released with amazing features. The latest flutter version is 3.32, check it out!',
     };
     return ToolResponse(
       toolName: name,
@@ -295,6 +295,7 @@ class NewsTool extends Tool {
           'Breaking News: ${apiResponse['headline']}. \n${apiResponse['details']}',
       data:
           apiResponse, // The data field is optional you can return data if it is required.
+      needsFurtherReasoning: true, // Set this to true if the tool needs further reasoning
     );
   }
 }

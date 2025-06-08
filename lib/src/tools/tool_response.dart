@@ -22,12 +22,18 @@ class ToolResponse {
   /// Optional data returned by the tool. This will be used for chaining responses in later versios.
   final Map<String, dynamic>? data;
 
+  /// If a tool has fetched data and the data requires further reasoning or processing,
+  /// this flag can be set to true. This is useful for tools that need to perform additional reasoning
+  /// or processing before returning a final result to the user.
+  bool needsFurtherReasoning;
+
   /// Constructs a ToolResponse with the tool name, success status, message, and optional data.
   ToolResponse({
     required this.toolName,
     required this.isRequestSuccessful,
     required this.message,
     this.data,
+    this.needsFurtherReasoning = false,
   });
 
   /// Creates a copy of the current ToolResponse with optional new values for each field.
@@ -36,12 +42,14 @@ class ToolResponse {
     bool? isRequestSuccessful,
     String? message,
     Map<String, dynamic>? data,
+    bool? needsFurtherReasoning,
   }) {
     return ToolResponse(
       toolName: toolName ?? this.toolName,
       isRequestSuccessful: isRequestSuccessful ?? this.isRequestSuccessful,
       message: message ?? this.message,
       data: data ?? this.data,
+      needsFurtherReasoning: needsFurtherReasoning ?? this.needsFurtherReasoning,
     );
   }
 
@@ -62,6 +70,7 @@ class ToolResponse {
       isRequestSuccessful: map['isRequestSuccessful'] as bool,
       message: map['message'] as String,
       data: map['data'] is Map ? Map<String, dynamic>.from(map['data']) : null,
+      needsFurtherReasoning: map['needsFurtherReasoning'] ?? false,
     );
   }
 
@@ -74,7 +83,7 @@ class ToolResponse {
 
   @override
   String toString() =>
-      'ToolResponse(toolName: $toolName, isRequestSuccessful: $isRequestSuccessful, message: $message, data: $data)';
+      'ToolResponse(toolName: $toolName, isRequestSuccessful: $isRequestSuccessful, message: $message, data: $data, needsFurtherReasoning: $needsFurtherReasoning)';
 
   @override
   bool operator ==(covariant ToolResponse other) {
@@ -83,6 +92,8 @@ class ToolResponse {
     return other.toolName == toolName &&
         other.isRequestSuccessful == isRequestSuccessful &&
         other.message == message &&
+        other.needsFurtherReasoning == needsFurtherReasoning &&
+
         mapEquals(other.data, data);
   }
 
@@ -91,5 +102,6 @@ class ToolResponse {
       toolName.hashCode ^
       isRequestSuccessful.hashCode ^
       message.hashCode ^
-      data.hashCode;
+      data.hashCode ^
+      needsFurtherReasoning.hashCode;
 }

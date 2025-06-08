@@ -23,6 +23,10 @@ class AgentMessage {
   /// Optional URL to an image
   final String? imageUrl;
 
+  /// Optional data associated with the message, this data is for internal use of the application and not for any extrnal use.
+  final Map<String, dynamic>? data;
+
+
   /// Constructs an AgentMessage with required content and generatedAt,
   AgentMessage({
     required this.content,
@@ -30,6 +34,7 @@ class AgentMessage {
     required this.isFromAgent,
     this.imageData,
     this.imageUrl,
+    this.data
   });
 
   /// Creates a copy of the current message with optional new values for each field
@@ -39,6 +44,7 @@ class AgentMessage {
     bool? isFromAgent,
     Uint8List? imageData,
     String? imageUrl,
+    Map<String, dynamic>? data
   }) {
     return AgentMessage(
       content: content ?? this.content,
@@ -46,6 +52,7 @@ class AgentMessage {
       isFromAgent: isFromAgent ?? this.isFromAgent,
       imageData: imageData ?? this.imageData,
       imageUrl: imageUrl ?? this.imageUrl,
+      data: data ?? this.data
     );
   }
 
@@ -56,6 +63,7 @@ class AgentMessage {
       'generatedAt': generatedAt.millisecondsSinceEpoch,
       'isFromAgent': isFromAgent,
       'imageUrl': imageUrl,
+      'data': data
     };
   }
 
@@ -68,6 +76,7 @@ class AgentMessage {
       ),
       isFromAgent: map['isFromAgent'] as bool,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
+      data: map['data'] as Map<String, dynamic>?
     );
   }
 
@@ -80,7 +89,7 @@ class AgentMessage {
 
   @override
   String toString() {
-    return 'AgentMessage(content: $content, generatedAt: $generatedAt, isFromAgent: $isFromAgent, imageData: $imageData, imageUrl: $imageUrl)';
+    return 'AgentMessage(content: $content, generatedAt: $generatedAt, isFromAgent: $isFromAgent, imageData: $imageData, imageUrl: $imageUrl, data: $data)';
   }
 
   /// Equality check based on all fields
@@ -92,7 +101,8 @@ class AgentMessage {
         other.generatedAt == generatedAt &&
         other.isFromAgent == isFromAgent &&
         other.imageData == imageData &&
-        other.imageUrl == imageUrl;
+        other.imageUrl == imageUrl &&
+        other.data == data;
   }
 
   /// Hash code based on all fields
@@ -102,6 +112,7 @@ class AgentMessage {
         generatedAt.hashCode ^
         isFromAgent.hashCode ^
         imageData.hashCode ^
-        imageUrl.hashCode;
+        imageUrl.hashCode ^
+        data.hashCode;
   }
 }
