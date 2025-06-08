@@ -5,7 +5,6 @@ import 'package:agenix/src/tools/_parser.dart';
 import 'package:agenix/src/tools/_tool_runner.dart';
 import 'package:agenix/src/tools/tool_registry.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 part '_memory_manager.dart';
 part '_prompt_builder.dart';
@@ -76,12 +75,28 @@ class Agent {
     }
   }
 
-  /// Generate a response to the user message.
+  /// Generate a response to the user message. This is the public facing method.
   Future<AgentMessage> generateResponse({
     required String convoId,
     required AgentMessage userMessage,
     int memoryLimit = 10,
     Object? metaData,
+  }) async {
+    return _generateResponse(
+      convoId: convoId,
+      userMessage: userMessage,
+      memoryLimit: memoryLimit,
+      metaData: metaData,
+    );
+  }
+
+  Future<AgentMessage> _generateResponse({
+    required String convoId,
+    required AgentMessage userMessage,
+    int memoryLimit = 10,
+    Object? metaData,
+    bool isPartOfChain = false,
+    String? input,
   }) async {
     try {
       _memoryManager.saveMessage(convoId, userMessage);
@@ -94,6 +109,8 @@ class Agent {
       final prompt = _promptBuilder.buildTextPrompt(
         memoryMessages: memoryMessages,
         userMessage: userMessage,
+        isPartOfChain: isPartOfChain,
+        input: input,
       );
 
       final String rawLLMResponse = await llm.generate(
@@ -101,11 +118,9 @@ class Agent {
         rawData: userMessage.imageData,
       );
 
-      debugPrint(rawLLMResponse);
-
       final parsed = _promptParser.parse(rawLLMResponse);
-
-      if (parsed.toolNames.isEmpty) {
+      // If the parsed data contains no agents or tools, return the fallback response
+      if (parsed.agentNames.isEmpty && parsed.toolNames.isEmpty) {
         final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
         final botResponse = AgentMessage(
           content: response,
@@ -116,16 +131,49 @@ class Agent {
         return botResponse;
       }
 
-      final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
-      final response = toolResponses.map((r) => r.message).join('\n');
+      // If a task requires multiple agents to be engaged, we handle that here
+      if (parsed.agentNames.isNotEmpty) {
+        List<String> agentsChain = parsed.agentNames;
+        String? inputForNextStep;
+        AgentMessage? agentResponse;
+        while (agentsChain.isNotEmpty) {
+          final agentName = agentsChain.removeAt(0);
+          final agent = _AgentRegistry.instance.getAgent(agentName);
 
-      final botMessage = AgentMessage(
-        content: response.isEmpty ? kLLMResponseOnFailure : response,
-        isFromAgent: true,
-        generatedAt: DateTime.now(),
-      );
-      _memoryManager.saveMessage(convoId, botMessage);
-      return botMessage;
+          if (agent == null) {
+            return AgentMessage(
+              content: kLLMResponseOnFailure,
+              isFromAgent: true,
+              generatedAt: DateTime.now(),
+            );
+          }
+
+          agentResponse = await agent._generateResponse(
+            convoId: convoId,
+            userMessage: userMessage,
+            memoryLimit: memoryLimit,
+            metaData: metaData,
+            isPartOfChain: true,
+            input: inputForNextStep,
+          );
+
+          inputForNextStep = agentResponse.content;
+        }
+
+        _memoryManager.saveMessage(convoId, agentResponse!);
+        return agentResponse;
+      } else {
+        final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
+        final response = toolResponses.map((r) => r.message).join('\n');
+
+        final botMessage = AgentMessage(
+          content: response.isEmpty ? kLLMResponseOnFailure : response,
+          isFromAgent: true,
+          generatedAt: DateTime.now(),
+        );
+        _memoryManager.saveMessage(convoId, botMessage);
+        return botMessage;
+      }
     } catch (e) {
       return AgentMessage(
         content: kLLMResponseOnFailure,

@@ -6,6 +6,9 @@ import 'dart:convert';
 /// It will also handle the case where the LLM asks for parameters to be provided.
 /// The parser will throw an exception if the output is not in the expected format.
 class PromptParserResult {
+  /// Name of the agents that need to be engaged for the task at hand
+  final List<String> agentNames;
+
   /// toolNames is a list of names of tools that the LLM has requested to execute.
   final List<String> toolNames;
 
@@ -17,6 +20,7 @@ class PromptParserResult {
 
   /// Constructs a PromptParserResult with the tool names, parameters, and an optional fallback response.
   PromptParserResult({
+    required this.agentNames,
     required this.toolNames,
     required this.params,
     this.fallbackResponse,
@@ -29,6 +33,16 @@ class PromptParser {
   PromptParserResult parse(String llmOutputJson) {
     final data = llmOutputJson.trim();
     final Map<String, dynamic> parsed = _tryJsonDecode(data);
+    // The first check should of agents, if this task requires multiple systems to be engaged.
+    if (parsed.containsKey("agents_chain")) {
+      final result = PromptParserResult(
+        agentNames: (parsed["agents_chain"] as List<dynamic>).cast<String>(),
+        toolNames: [],
+        params: {},
+      );
+
+      return result;
+    }
     // Check if the parsed data contains a "response" key
     // If it does, return the response as a fallback
     // If it doesn't, check if it contains a "tools" key
@@ -37,6 +51,7 @@ class PromptParser {
     // indicating that the format is unrecognized
     if (parsed.containsKey("response")) {
       return PromptParserResult(
+        agentNames: [],
         toolNames: [],
         params: {},
         fallbackResponse: parsed["response"],
@@ -58,7 +73,11 @@ class PromptParser {
           tool: Map<String, dynamic>.from(rawParamsMap[tool] ?? {}),
       };
 
-      return PromptParserResult(toolNames: tools, params: params);
+      return PromptParserResult(
+        toolNames: tools,
+        params: params,
+        agentNames: [],
+      );
     } else {
       throw Exception("Unrecognized format");
     }

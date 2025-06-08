@@ -13,17 +13,19 @@ class _PromptBuilder {
     List<AgentMessage>? memoryMessages,
     required AgentMessage userMessage,
     bool isPartOfChain = false,
+    String? input,
   }) {
     final buffer = StringBuffer();
 
-    buffer.writeln("RETURN THE RESPONSE IN JSON FORMAT ONLY, the ");
+    buffer.writeln("RETURN THE RESPONSE IN JSON FORMAT ONLY");
 
     buffer.writeln("System Instruction: $systemPrompt\n");
 
-    print("Agents in the System: ${_AgentRegistry.instance.getAllAgents().map((e) => e.toString()).join(", ")}");
-    buffer.writeln(
-      "Agents in the System: ${_AgentRegistry.instance.getAllAgents().map((e) => e.toString()).join(", ")}\n",
-    );
+    if (!isPartOfChain) {
+      buffer.writeln(
+        "Agents in the System: ${_AgentRegistry.instance.getAllAgents().map((e) => e.toString()).join(", ")}",
+      );
+    }
 
     if (memoryMessages != null && memoryMessages.isNotEmpty) {
       buffer.writeln("Chat History: ");
@@ -45,7 +47,7 @@ class _PromptBuilder {
     }
 
     buffer.writeln('''
-    Output format if no tools are available for the prompt:
+    \nOutput format if no tools are available for the prompt:
     {
       "response": "<response>"
     }
@@ -72,7 +74,7 @@ class _PromptBuilder {
         '''Output format if the user's tasks needs to be handled by multiple agents in the system:
       {
         "agents_chain": ["<agent_name1>", "<agent_name2>", ...]"
-      }''',
+      }\n''',
       );
     }
 
@@ -91,6 +93,12 @@ class _PromptBuilder {
     buffer.writeln(
       "${"\nBased on the system instruction, chat history, tools and agents in the system, generate a response for the user. If a tool should be used for the response, include the tool name in the response, if parameters are required for a tool, include them in the response, if no parameters are required, do not include them. If no tool is available for the prompt, generate the response yourself. If agents should be used, output a chain of agents in the logical sequence. Give the response strictly in JSON, do not add anything extra to the response, just the parsable JSON. Do not include any text outside of the JSON. Order of action should be as follows: 1. Check all the available tools. \n2. If a tool or tools are found to respond to the prompt then output them in the provided JSON format. \n3. If a tool has a parameter that is required, deduce it from the given information and the prompt. If a parameters can not be deduced, ask the user to provide that paramter in the response field of the JSON."}\n",
     );
+
+
+    // If data is provided as input from some previous execution in the chain, add it to the prompt
+    if (input != null && input.isNotEmpty && isPartOfChain) {
+      buffer.writeln("Use this data to perform the task, if tools are to be used for the task, find the parameters from this data, if parameters can be extracted from this data, extract them, otherwise DO NOT ASK THE USER FOR THE PARAMETERS, try and solve the task using this only this data and the data already available to you. Data: $input\n");
+    }
 
     if (!isPartOfChain) {
       "${"\n4. If this tasks involve multiple agents in the system, output a chain of agents in the logical sequence. \n5. If id does not involve multiple agents in the system, and the task can not be solved completely by the tools available for the prompt, generate the response yourself. \nThis is the prompt: "}: ${userMessage.content}\n";

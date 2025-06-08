@@ -54,12 +54,37 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       pathToSystemData: 'assets/agent1.json',
     );
 
+    agent.toolRegistry.registerTool(
+      FindDataTool(
+        name: 'find_data',
+        description: 'This tool should be used if the user asks to find data.',
+        parameters: [],
+      ),
+    );
+
     final agent2 = await Agent.create(
       dataStore: DataStore.firestoreDataStore(),
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Statistic Agent',
-      role: 'These agent analyzes data using statistics, whenever large amount of data is needed to be analyzed this agent should be used.',
+      role:
+          'These agent analyzes data using statistics, whenever large amount of data is needed to be analyzed this agent should be used.',
       pathToSystemData: 'assets/agent2.json',
+    );
+
+    agent2.toolRegistry.registerTool(
+      AnalyzeDataTool(
+        name: 'analyze_data',
+        description:
+            'This tool should be used if the user asks to analyze data.',
+        parameters: [
+          ParameterSpecification(
+            name: 'data',
+            type: 'String',
+            description: 'The data to be analyzed.',
+            required: true,
+          ),
+        ],
+      ),
     );
 
     final agent3 = await Agent.create(
@@ -70,148 +95,165 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       pathToSystemData: 'assets/agent3.json',
     );
 
-    agent.toolRegistry.registerTool(
-      NewsTool(
-        name: 'news_tool',
+    agent3.toolRegistry.registerTool(
+      WriteBlogTool(
+        name: 'write_article',
         description:
-            'This tool should be used if the user asks for news of any sort.',
-      ),
-    );
-    agent.toolRegistry.registerTool(
-      WeatherTool(
-        name: 'weather_tool',
-        description:
-            'This tool should be used if the user asks for the weather.',
+            'This tool should be used if the user asks to write an article or a blog using some data.',
         parameters: [
           ParameterSpecification(
-            name: 'location',
-            type: 'String',
-            description: 'The location for which to get the weather.',
-            required: true,
-          ),
-        ],
-      ),
-    );
-
-    agent.toolRegistry.registerTool(
-      HelloTool(
-        name: 'hello_tool',
-        description:
-            'This tool should be used if the user asks for hello, or any sort of greeting.',
-        parameters: [
-          ParameterSpecification(
-            name: 'userName',
+            name: 'analyzedData',
             type: 'String',
             description:
-                'The user name that the agent should use to greet the user.',
-            required: false,
-          ),
-        ],
-      ),
-    );
-
-    agent.toolRegistry.registerTool(
-      JobsTool(
-        name: 'jobs_tool',
-        description: 'This tool should be used if the user asks to post a job',
-        parameters: [
-          ParameterSpecification(
-            name: 'jobTitle',
-            type: 'String',
-            description: 'The job title for which to get job postings.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'location',
-            type: 'String',
-            description: 'The location for which to get job postings.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'company',
-            type: 'String',
-            description: 'The company for which to get job postings.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'salary',
-            type: 'String',
-            description: 'The salary for which to get job postings.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'experience',
-            type: 'String',
-            description: 'The experience for which to get job postings.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'skills',
-            type: 'String',
-            description: 'The skills for which to get job postings.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'description',
-            type: 'String',
-            description: 'The description for which to get job postings.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'type',
-            type: 'String',
-            description: 'The type for which to get job postings.',
+                'This is the analyzed and processed data that should be used to write an article.',
             required: true,
           ),
         ],
       ),
     );
 
-    agent.toolRegistry.registerTool(
-      CreatePostsTool(
-        name: 'create_posts_tool',
-        description:
-            'This tool should be used if the user asks to create a post',
-        parameters: [
-          ParameterSpecification(
-            name: 'title',
-            type: 'String',
-            description: 'The title of the post.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'description',
-            type: 'String',
-            description: 'The description of the post.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'userId',
-            type: 'String',
-            description: 'The user ID of the post creator.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'category',
-            type: 'String',
-            description: 'The category of the post.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'userName',
-            type: 'String',
-            description: 'The user name of the post creator.',
-            required: true,
-          ),
-          ParameterSpecification(
-            name: 'userProfilePic',
-            type: 'String',
-            description: 'The profile picture URL of the post creator.',
-            required: false,
-          ),
-        ],
-      ),
-    );
+    // agent.toolRegistry.registerTool(
+    //   NewsTool(
+    //     name: 'news_tool',
+    //     description:
+    //         'This tool should be used if the user asks for news of any sort.',
+    //   ),
+    // );
+    // agent.toolRegistry.registerTool(
+    //   WeatherTool(
+    //     name: 'weather_tool',
+    //     description:
+    //         'This tool should be used if the user asks for the weather.',
+    //     parameters: [
+    //       ParameterSpecification(
+    //         name: 'location',
+    //         type: 'String',
+    //         description: 'The location for which to get the weather.',
+    //         required: true,
+    //       ),
+    //     ],
+    //   ),
+    // );
+
+    // agent.toolRegistry.registerTool(
+    //   HelloTool(
+    //     name: 'hello_tool',
+    //     description:
+    //         'This tool should be used if the user asks for hello, or any sort of greeting.',
+    //     parameters: [
+    //       ParameterSpecification(
+    //         name: 'userName',
+    //         type: 'String',
+    //         description:
+    //             'The user name that the agent should use to greet the user.',
+    //         required: false,
+    //       ),
+    //     ],
+    //   ),
+    // );
+
+    // agent.toolRegistry.registerTool(
+    //   JobsTool(
+    //     name: 'jobs_tool',
+    //     description: 'This tool should be used if the user asks to post a job',
+    //     parameters: [
+    //       ParameterSpecification(
+    //         name: 'jobTitle',
+    //         type: 'String',
+    //         description: 'The job title for which to get job postings.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'location',
+    //         type: 'String',
+    //         description: 'The location for which to get job postings.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'company',
+    //         type: 'String',
+    //         description: 'The company for which to get job postings.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'salary',
+    //         type: 'String',
+    //         description: 'The salary for which to get job postings.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'experience',
+    //         type: 'String',
+    //         description: 'The experience for which to get job postings.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'skills',
+    //         type: 'String',
+    //         description: 'The skills for which to get job postings.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'description',
+    //         type: 'String',
+    //         description: 'The description for which to get job postings.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'type',
+    //         type: 'String',
+    //         description: 'The type for which to get job postings.',
+    //         required: true,
+    //       ),
+    //     ],
+    //   ),
+    // );
+
+    // agent.toolRegistry.registerTool(
+    //   CreatePostsTool(
+    //     name: 'create_posts_tool',
+    //     description:
+    //         'This tool should be used if the user asks to create a post',
+    //     parameters: [
+    //       ParameterSpecification(
+    //         name: 'title',
+    //         type: 'String',
+    //         description: 'The title of the post.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'description',
+    //         type: 'String',
+    //         description: 'The description of the post.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'userId',
+    //         type: 'String',
+    //         description: 'The user ID of the post creator.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'category',
+    //         type: 'String',
+    //         description: 'The category of the post.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'userName',
+    //         type: 'String',
+    //         description: 'The user name of the post creator.',
+    //         required: true,
+    //       ),
+    //       ParameterSpecification(
+    //         name: 'userProfilePic',
+    //         type: 'String',
+    //         description: 'The profile picture URL of the post creator.',
+    //         required: false,
+    //       ),
+    //     ],
+    //   ),
+    // );
 
     setState(() {
       isAgentReady = true;
@@ -382,8 +424,6 @@ class JobsTool extends Tool {
       'type': params['type'] as String,
     };
 
-    debugPrint(payload.toString());
-
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
@@ -419,6 +459,66 @@ class CreatePostsTool extends Tool {
       message: 'Post created successfully',
       data:
           payload, // The data field is optional you can return data if it is required.
+    );
+  }
+}
+
+class FindDataTool extends Tool {
+  FindDataTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Flutter is awesome! It is an open-source community-driven framework for building native, hybrid, and multi-platform apps from a single codebase.',
+    );
+  }
+}
+
+class AnalyzeDataTool extends Tool {
+  AnalyzeDataTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Flutter is awesome has been analyzed! Flutter is used by 100 developers in the pool, 80% people prefer flutter over other frameworks.',
+    );
+  }
+}
+
+class WriteBlogTool extends Tool {
+  WriteBlogTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    // Simulate a network call
+    await Future.delayed(const Duration(seconds: 2));
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Flutter is awesome and this is an article.',
     );
   }
 }
