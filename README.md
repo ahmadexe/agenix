@@ -174,5 +174,19 @@ In this example three agents are working together:
 https://github.com/user-attachments/assets/f79cf6ac-6913-49a7-982a-bd7b975599b7
 
 
+#### Workflow:
+
+
+![flow](https://github.com/user-attachments/assets/8ad9f4ac-018a-4092-bf8c-4fc72da81673)
+
+
+
+### Agentic App
+An agentic app is basically an application that is powered by an AI agent, this AI agent can perform tasks for the user in the platform, using pre defined tools. The following example shows how an agent "Lens" can have a sepcific personality, it can answer questions about the platform, perform tasks using tools, etc.
+
+
+https://github.com/user-attachments/assets/bcb56da8-4285-4661-af52-ee8dd6f31d08
+
+
 ## Maintainers
 - [Muhammad Ahmad](https://github.com/ahmadexe)
