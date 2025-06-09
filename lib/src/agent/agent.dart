@@ -99,7 +99,9 @@ class Agent {
     String? input,
   }) async {
     try {
-      _memoryManager.saveMessage(convoId, userMessage);
+      if (!isPartOfChain) {
+        _memoryManager.saveMessage(convoId, userMessage);
+      }
 
       final memoryMessages = await _memoryManager.getContext(
         convoId,
