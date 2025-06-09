@@ -19,7 +19,7 @@ A framework to build agentic apps using Flutter & Dart!
 
 
 ## Overview
-Agenix aims at providing an easy interface to build Agentic apps using Flutter and Dart. It comes with various Datastores to store your messages, various LLMs to act as the base of your agentic app. Just define the data of your Agentic app, your tools and you are good to go!
+Agenix aims at providing an easy interface to build Agentic apps using Flutter and Dart. It comes with various Datastores to store your messages, various LLMs to act as the base of your agentic app. Just define the background data of your Agentic app, your tools and you are good to go!
 
 
 ## Components
@@ -41,26 +41,17 @@ Location of the file
 **assets/system_data.json**
 
 
-In the main function or in your bloc or the point of contact to your agent, add the following lines to initialize the Agent.
+In the main function or in your bloc or the point of contact to your agent, add the following lines to initialize the Agent. This current example initializes the agent using firebase firestore as DataStore and Gemini as the LLM. You can swap them for your own implementations. You can create as many agents as you want, agenix will keep track of them, internally agenix will delegate tasks to the most appropriate agent. Agenix can also engage multiple agents in a chain to perform a sequence of sub tasks.
 ```
-final agent = Agent();
-agent.init(
-    dataStore: YourDataStore(),
-    llm: YourLLM(),
-);
-```
-
-If you want to use Firebase Firestore as your DataStore, and Gemini as your LLM, you can do something like this:
-```
-final agent = Agent();
-const apiKey = String.fromEnvironment('GEMINI_API_KEY');
-agent.init(
-    dataStore: DataStore.firestoreDataStore(),
-    llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
-);
+final agent = await Agent.create(
+      dataStore: DataStore.firestoreDataStore(),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      name: 'General Purpose Agent',
+      role: 'This is the main agent for the platform.',
+    );
 ```
 
-Run and define your key:
+Define your key and run:
 ```
 flutter run -d chrome --dart-define=GEMINI_API_KEY=Your-Gemini-Key
 ```
@@ -69,7 +60,7 @@ flutter run -d chrome --dart-define=GEMINI_API_KEY=Your-Gemini-Key
 ### Generating Response
 To get a response from the Agent, call the agent.generateResponse method.
 ```
-final res = await Agent().generateResponse(
+final res = await agent.generateResponse(
     convoId: '1',
     userMessage: userMessage,
 );
@@ -89,13 +80,24 @@ class NewsTool extends Tool {
   NewsTool({required super.name, required super.description});
 
   @override
-  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
     // Simulate a network call
     await Future.delayed(const Duration(seconds: 2));
-    return {
-      'title': 'Breaking News',
-      'description': 'This is a sample news description.',
-    };  
+    final apiResponse = {
+      'headline': 'Flutter is Awesome!',
+      'details':
+          'Flutter 3.0 has been released with amazing features. The latest flutter version is 3.32, check it out!',
+    };
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message:
+          'Breaking News: ${apiResponse['headline']}. \n${apiResponse['details']}',
+      data:
+          apiResponse, // The data field is optional you can return data if it is required.
+      needsFurtherReasoning:
+          true, // Set this to true if the tool needs further reasoning
+    );
   }
 }
 ```
@@ -103,17 +105,25 @@ class NewsTool extends Tool {
 The above tool uses no params, but to use a tool with params. Do something like this.
 ```
 class WeatherTool extends Tool {
-  WeatherTool({required super.name, required super.description, required super.parameters});
+  WeatherTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
 
   @override
-  Future<Map<String, dynamic>?> run(Map<String, dynamic> params) async {
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
     // Simulate a network call
     await Future.delayed(const Duration(seconds: 2));
-    return {
-      'temperature': '25°C',
-      'condition': 'Sunny',
-      'location': params['location'],
-    };
+    final apiResponse = {'temperature': 25, 'condition': 'Sunny'};
+    final location = params['location'] as String?;
+
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message:
+          'The weather in $location is ${apiResponse['condition']} with a temperature of ${apiResponse['temperature']}°C.',
+    );
   }
 }
 ```
@@ -144,13 +154,24 @@ ToolRegistry().registerTool(
 );
 ```
 
-Once a tool is defined Agenix is capable enough to hit them when required, deduce the parameters from the input, or ask for the parameters if they are required. If your tool fails to perform the intended task, you can try adding a more defined description.
+Once a tool is defined and registered Agenix is capable enough to hit them when required, deduce the parameters from the input, or ask for the parameters if they are required. If your tool fails to perform the intended task, you can try adding a more defined description. If a required task falls under the responsibilities of multiple agents, agenix will engage them in a chain and delegate the sub-tasks to the respective agents. Agenix will manage the chain itself and use the output from one agent as the input of the other. 
 
 
 ## Examples
 1. [Example of Multi Agent Systems Built Using Agenix](https://github.com/ahmadexe/agenix-examples/tree/main/multi_agent_system)
 2. [Basic usage of Agenix](https://github.com/ahmadexe/agenix/tree/main/example)
 3. [Using Agenix with Custom Data Store](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example)
+
+
+## Visuals
+
+### Multi Agents System
+In this example three agents are working together:
+1. Orchestrator: The agent that is responsible for communicating with the end user.
+2. News Agent: The agent that is responsible for dealing with News API operations.
+3. Favourites Agent: The agent that manages user's favourites, marking something as favourite, removing something from favourite or fetching the user favourites!
+
+https://github.com/user-attachments/assets/f79cf6ac-6913-49a7-982a-bd7b975599b7
 
 
 ## Maintainers
