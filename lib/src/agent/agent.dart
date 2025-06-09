@@ -157,7 +157,10 @@ class Agent {
             input: inputForNextStep,
           );
 
-          inputForNextStep = agentResponse.content;
+          inputForNextStep =
+              agentResponse.data != null
+                  ? agentResponse.data!.toString()
+                  : agentResponse.content;
         }
 
         _memoryManager.saveMessage(convoId, agentResponse!);
