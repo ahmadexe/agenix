@@ -1,6 +1,6 @@
 name: agenix
 description: "Build smart AI agents in Flutter with memory, tools, and LLMs like Gemini. Fast, pluggable, and developer-friendly."
-version: 2.1.0
+version: 3.0.0
 homepage: https://github.com/ahmadexe/agenix
 repository: https://github.com/ahmadexe/agenix
 

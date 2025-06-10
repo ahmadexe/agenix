@@ -1,3 +1,10 @@
+## 3.0.0
+- Support for multiple agents
+- Agents can reiterate over tool responses
+- Agent orchestration to build chain of AI Agents
+- Data sharing between agents
+
+
 ## 2.1.0
 - Added support for custom path of Agent's data
 - Added support to add data in the tool response directly
