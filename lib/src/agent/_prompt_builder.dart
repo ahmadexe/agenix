@@ -46,6 +46,8 @@ class _PromptBuilder {
           "{${tool.name}: Description: ${tool.description}, Parameters: ${tool.parameters?.map((e) => e!.toJson())}},",
         );
       }
+    } else {
+      buffer.writeln("Tools: No tools available.");
     }
 
     buffer.writeln('''
