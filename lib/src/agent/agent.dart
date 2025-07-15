@@ -87,6 +87,7 @@ class Agent {
       userMessage: userMessage,
       memoryLimit: memoryLimit,
       metaData: metaData,
+      isPartOfChain: false,
     );
 
     await _memoryManager.saveMessage(convoId, response, metaData: metaData);
