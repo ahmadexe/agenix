@@ -129,7 +129,7 @@ class Agent {
           isFromAgent: true,
           generatedAt: DateTime.now(),
         );
-        _memoryManager.saveMessage(convoId, botResponse);
+
         return botResponse;
       }
 
