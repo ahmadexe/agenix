@@ -82,6 +82,8 @@ class Agent {
     int memoryLimit = 10,
     Object? metaData,
   }) async {
+    _memoryManager.saveMessage(convoId, userMessage, metaData: metaData);
+    
     final response = await _generateResponse(
       convoId: convoId,
       userMessage: userMessage,
