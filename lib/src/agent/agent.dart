@@ -82,12 +82,15 @@ class Agent {
     int memoryLimit = 10,
     Object? metaData,
   }) async {
-    return _generateResponse(
+    final response = await _generateResponse(
       convoId: convoId,
       userMessage: userMessage,
       memoryLimit: memoryLimit,
       metaData: metaData,
     );
+
+    await _memoryManager.saveMessage(convoId, response, metaData: metaData);
+    return response;
   }
 
   Future<AgentMessage> _generateResponse({
@@ -99,10 +102,6 @@ class Agent {
     String? input,
   }) async {
     try {
-      if (!isPartOfChain) {
-        _memoryManager.saveMessage(convoId, userMessage);
-      }
-
       final memoryMessages = await _memoryManager.getContext(
         convoId,
         metaData: metaData,
@@ -165,8 +164,7 @@ class Agent {
                   : agentResponse.content;
         }
 
-        _memoryManager.saveMessage(convoId, agentResponse!);
-        return agentResponse;
+        return agentResponse!;
       } else {
         final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
         final response = toolResponses.map((r) => r.message).join('\n');
@@ -198,9 +196,6 @@ class Agent {
                   : null,
         );
 
-        if (!isPartOfChain) {
-          _memoryManager.saveMessage(convoId, botMessage);
-        }
         return botMessage;
       }
     } catch (e) {
