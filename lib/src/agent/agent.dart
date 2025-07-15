@@ -185,8 +185,6 @@ class Agent {
             rawData,
           );
 
-          _memoryManager.saveMessage(convoId, processedResponse);
-
           return processedResponse;
         }
 
@@ -200,7 +198,9 @@ class Agent {
                   : null,
         );
 
-        _memoryManager.saveMessage(convoId, botMessage);
+        if (!isPartOfChain) {
+          _memoryManager.saveMessage(convoId, botMessage);
+        }
         return botMessage;
       }
     } catch (e) {
