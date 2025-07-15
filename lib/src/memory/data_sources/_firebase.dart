@@ -129,8 +129,8 @@ class FirebaseDataStore extends DataStore {
           .collection('conversations')
           .doc(conversationId)
           .set({
-            'lastMessage': payload['message'],
-            'lastMessageTime': payload['time'],
+            'lastMessage': payload['content'],
+            'lastMessageTime': payload['generatedAt'],
             'conversationId': conversationId,
           }, SetOptions(merge: true));
     } catch (e) {
