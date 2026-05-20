@@ -1,6 +1,6 @@
 name: agenix
 description: "Build smart AI agents in Flutter with memory, tools, and LLMs like Gemini. Fast, pluggable, and developer-friendly."
-version: 3.0.0
+version: 4.0.0
 homepage: https://github.com/ahmadexe/agenix
 repository: https://github.com/ahmadexe/agenix
 
@@ -25,10 +25,10 @@ dependencies:
   google_generative_ai: ^0.4.7
 
   # Firebase
-  firebase_core: ^3.9.0
-  firebase_auth: ^5.3.4
-  cloud_firestore: ^5.6.0
-  firebase_storage: ^12.3.7
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  cloud_firestore: ^6.0.0
+  firebase_storage: ^13.0.0
   
   # Utils
   uuid: ^4.5.1
