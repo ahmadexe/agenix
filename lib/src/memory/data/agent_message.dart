@@ -3,7 +3,8 @@
 // It supports text content, timestamps, agent identification, and optional image data or URL.
 
 import 'dart:convert';
-import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 
 /// Represents a message in a conversation, either from the agent or the user.
 /// It can optionally contain an image (as binary data or a URL).
@@ -108,9 +109,9 @@ class AgentMessage {
     return other.content == content &&
         other.generatedAt == generatedAt &&
         other.isFromAgent == isFromAgent &&
-        other.imageData == imageData &&
+        listEquals(other.imageData, imageData) &&
         other.imageUrl == imageUrl &&
-        other.data == data &&
+        mapEquals(other.data, data) &&
         other.isError == isError;
   }
 
@@ -120,9 +121,9 @@ class AgentMessage {
     return content.hashCode ^
         generatedAt.hashCode ^
         isFromAgent.hashCode ^
-        imageData.hashCode ^
+        (imageData != null ? Object.hashAll(imageData!) : 0) ^
         imageUrl.hashCode ^
-        data.hashCode ^
+        (data != null ? Object.hashAll(data!.entries) : 0) ^
         isError.hashCode;
   }
 }
