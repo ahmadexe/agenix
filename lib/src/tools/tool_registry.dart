@@ -1,3 +1,5 @@
+import 'package:agenix/src/static/agenix_exceptions.dart';
+
 import 'tool.dart';
 
 /// Tool Registry for managing tools available to a single agent.
@@ -11,7 +13,7 @@ class ToolRegistry {
   /// If you miss this step, the tool won't be available for use.
   void registerTool(Tool tool) {
     if (hasTool(tool.name)) {
-      throw Exception(
+      throw ConfigException(
         'Tool with name ${tool.name} already exists. Do not register the same tool twice. Use a different name.',
       );
     }

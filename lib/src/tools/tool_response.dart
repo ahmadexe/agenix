@@ -103,6 +103,6 @@ class ToolResponse {
       toolName.hashCode ^
       isRequestSuccessful.hashCode ^
       message.hashCode ^
-      data.hashCode ^
+      (data != null ? Object.hashAll(data!.entries) : 0) ^
       needsFurtherReasoning.hashCode;
 }

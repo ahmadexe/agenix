@@ -192,13 +192,11 @@ class Agent {
     var isFirstCall = true;
 
     for (var step = 0; step < kMaxToolIterations; step++) {
-      final rawLLMResponse = await _llmGenerateWithParseRetry(
+      final parsed = await _llmGenerateWithParseRetry(
         prompt: currentPrompt,
         rawData: isFirstCall ? userMessage.imageData : null,
       );
       isFirstCall = false;
-
-      final parsed = rawLLMResponse;
 
       switch (parsed.outcome) {
         case ParseOutcome.response:

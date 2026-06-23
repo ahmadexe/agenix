@@ -1,3 +1,5 @@
+import 'package:agenix/src/static/agenix_exceptions.dart';
+
 /// An [AgentScope] owns a set of agents that can discover and chain to each other.
 ///
 /// Use [AgentScope.global] for the default shared scope, or create isolated
@@ -25,7 +27,7 @@ class AgentScope {
     if (_agents.containsKey(name)) {
       switch (policy) {
         case RegistrationPolicy.throwIfExists:
-          throw Exception(
+          throw ConfigException(
             'Agent with name $name already exists. Use RegistrationPolicy.replace '
             'to overwrite, or call dispose() on the existing agent first.',
           );
