@@ -19,9 +19,12 @@ abstract class DataStore {
     Object? metaData,
   });
 
-  /// This is the abstract method to get the messages, it should be implemented by the concrete class
+  /// This is the abstract method to get the messages, it should be implemented by the concrete class.
+  /// When [limit] is provided, only the most recent [limit] messages are returned
+  /// (ordered oldest-first for prompt construction).
   Future<List<AgentMessage>> getMessages(
     String conversationId, {
+    int? limit,
     Object? metaData,
   });
 

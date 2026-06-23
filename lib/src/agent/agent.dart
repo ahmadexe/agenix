@@ -106,8 +106,6 @@ class Agent {
     int memoryLimit = 10,
     Object? metaData,
   }) async {
-    _memoryManager.saveMessage(convoId, userMessage, metaData: metaData);
-
     try {
       final response = await _generateResponse(
         convoId: convoId,
@@ -117,6 +115,9 @@ class Agent {
         isPartOfChain: false,
       );
 
+      // Save both messages after generation so the user message isn't
+      // duplicated in the context that was just sent to the LLM.
+      await _memoryManager.saveMessage(convoId, userMessage, metaData: metaData);
       await _memoryManager.saveMessage(convoId, response, metaData: metaData);
       return response;
     } on AgenixException catch (e, st) {
@@ -151,6 +152,7 @@ class Agent {
   }) async {
     final memoryMessages = await _memoryManager.getContext(
       convoId,
+      limit: memoryLimit,
       metaData: metaData,
     );
 

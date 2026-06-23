@@ -84,6 +84,7 @@ class FirebaseDataStore extends DataStore {
   @override
   Future<List<AgentMessage>> getMessages(
     String conversationId, {
+    int? limit,
     Object? metaData,
   }) async {
     try {
@@ -95,12 +96,24 @@ class FirebaseDataStore extends DataStore {
           .doc(conversationId)
           .collection('messages');
 
-      final snapshots = await ref.orderBy('generatedAt').get();
-      if (snapshots.docs.isEmpty) return [];
-
-      return snapshots.docs
-          .map((doc) => AgentMessage.fromMap(doc.data()))
-          .toList();
+      QuerySnapshot<Map<String, dynamic>> snapshots;
+      if (limit != null) {
+        // Fetch the most recent N messages (descending), then reverse to oldest-first
+        snapshots = await ref
+            .orderBy('generatedAt', descending: true)
+            .limit(limit)
+            .get();
+        if (snapshots.docs.isEmpty) return [];
+        return snapshots.docs.reversed
+            .map((doc) => AgentMessage.fromMap(doc.data()))
+            .toList();
+      } else {
+        snapshots = await ref.orderBy('generatedAt').get();
+        if (snapshots.docs.isEmpty) return [];
+        return snapshots.docs
+            .map((doc) => AgentMessage.fromMap(doc.data()))
+            .toList();
+      }
     } on AgenixException {
       rethrow;
     } catch (e, st) {
