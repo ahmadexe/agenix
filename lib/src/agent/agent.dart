@@ -170,6 +170,8 @@ class Agent {
     Object? metaData,
     bool isPartOfChain = false,
     String? input,
+    Set<String>? chainVisited,
+    int chainDepth = 0,
   }) async {
     final memoryMessages = await _memoryManager.getContext(
       convoId,
@@ -215,6 +217,8 @@ class Agent {
             userMessage: userMessage,
             memoryLimit: memoryLimit,
             metaData: metaData,
+            visited: chainVisited,
+            depth: chainDepth,
           );
 
         case ParseOutcome.tools:
@@ -319,18 +323,37 @@ class Agent {
     required AgentMessage userMessage,
     required int memoryLimit,
     Object? metaData,
+    Set<String>? visited,
+    int depth = 0,
   }) async {
     List<String> agentsChain = parsed.agentNames;
     String? inputForNextStep;
     AgentMessage? agentResponse;
+    final visitedSet = visited ?? <String>{name};
 
     while (agentsChain.isNotEmpty) {
       final agentName = agentsChain.removeAt(0);
+
+      if (visitedSet.contains(agentName)) {
+        throw ConfigException(
+          'Cycle detected in agent chain: $agentName has already been visited '
+          '(path: ${visitedSet.join(" → ")} → $agentName)',
+        );
+      }
+
+      if (depth >= kMaxChainDepth) {
+        throw ConfigException(
+          'Agent chain depth limit ($kMaxChainDepth) exceeded at agent $agentName',
+        );
+      }
+
       final agent = _AgentRegistry.instance.getAgent(agentName, scope: _scope);
 
       if (agent == null) {
         throw AgentNotFoundException(agentName);
       }
+
+      visitedSet.add(agentName);
 
       agentResponse = await agent._generateResponse(
         convoId: convoId,
@@ -339,6 +362,8 @@ class Agent {
         metaData: metaData,
         isPartOfChain: true,
         input: inputForNextStep,
+        chainVisited: visitedSet,
+        chainDepth: depth + 1,
       );
 
       inputForNextStep =

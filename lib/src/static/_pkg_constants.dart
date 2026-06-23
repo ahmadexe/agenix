@@ -11,3 +11,6 @@ const int kMaxParseRetries = 2;
 /// Corrective instruction appended on parse-retry turns.
 const String kParseRetryInstruction =
     "Your last reply was not valid JSON. Reply with ONLY the JSON object, no prose, no markdown fences.";
+
+/// Maximum depth for agent chain delegation (prevents unbounded recursion).
+const int kMaxChainDepth = 5;
