@@ -5,6 +5,7 @@
 import 'package:agenix/src/memory/data/agent_message.dart';
 import 'package:agenix/src/memory/data/conversation.dart';
 import 'package:agenix/src/memory/data/data_store.dart';
+import 'package:agenix/src/static/agenix_exceptions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -14,9 +15,28 @@ import 'package:uuid/uuid.dart';
 /// This allows for easy swapping of data stores without changing the core logic of the agent's memory management.
 /// To use this data store, you need to initialize Firebase in your app and provide the necessary configuration.
 class FirebaseDataStore extends DataStore {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  final FirebaseStorage _storage;
+
+  /// Creates a [FirebaseDataStore].
+  ///
+  /// Accepts optional Firebase instances for dependency injection (e.g.
+  /// using `fake_cloud_firestore` / `firebase_auth_mocks` in tests).
+  /// Defaults to the standard singleton instances.
+  FirebaseDataStore({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+    FirebaseStorage? storage,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance,
+        _storage = storage ?? FirebaseStorage.instance;
+
+  String _resolveUserId() {
+    final user = _auth.currentUser;
+    if (user == null) throw const NotAuthenticatedException();
+    return user.uid;
+  }
 
   @override
   Future<void> deleteConversation(
@@ -24,7 +44,7 @@ class FirebaseDataStore extends DataStore {
     Object? metaData,
   }) async {
     try {
-      final userId = _auth.currentUser!.uid;
+      final userId = _resolveUserId();
       final ref = _firestore
           .collection('chats')
           .doc(userId)
@@ -42,18 +62,19 @@ class FirebaseDataStore extends DataStore {
       batch.delete(ref);
 
       await batch.commit();
-    } catch (e) {
-      throw Exception('Error deleting conversation: $e');
+    } on AgenixException {
+      rethrow;
+    } catch (e, st) {
+      throw DataStoreException('Error deleting conversation', cause: e, causeStack: st);
     }
   }
 
   @override
-  Future<List<Conversation>> getConversations(
-    String conversationId, {
+  Future<List<Conversation>> getConversations({
     Object? metaData,
   }) async {
     try {
-      final userId = _auth.currentUser!.uid;
+      final userId = _resolveUserId();
       final ref = _firestore
           .collection('chats')
           .doc(userId)
@@ -65,32 +86,50 @@ class FirebaseDataStore extends DataStore {
       return snapshots.docs
           .map((doc) => Conversation.fromMap(doc.data()))
           .toList();
-    } catch (e) {
-      throw Exception('Error fetching conversations: $e');
+    } on AgenixException {
+      rethrow;
+    } catch (e, st) {
+      throw DataStoreException('Error fetching conversations', cause: e, causeStack: st);
     }
   }
 
   @override
   Future<List<AgentMessage>> getMessages(
     String conversationId, {
+    int? limit,
     Object? metaData,
   }) async {
     try {
+      final userId = _resolveUserId();
       final ref = _firestore
           .collection('chats')
-          .doc(_auth.currentUser!.uid)
+          .doc(userId)
           .collection('conversations')
           .doc(conversationId)
           .collection('messages');
 
-      final snapshots = await ref.orderBy('generatedAt').get();
-      if (snapshots.docs.isEmpty) return [];
-
-      return snapshots.docs
-          .map((doc) => AgentMessage.fromMap(doc.data()))
-          .toList();
-    } catch (e) {
-      throw Exception('Error fetching recent messages: $e');
+      QuerySnapshot<Map<String, dynamic>> snapshots;
+      if (limit != null) {
+        // Fetch the most recent N messages (descending), then reverse to oldest-first
+        snapshots = await ref
+            .orderBy('generatedAt', descending: true)
+            .limit(limit)
+            .get();
+        if (snapshots.docs.isEmpty) return [];
+        return snapshots.docs.reversed
+            .map((doc) => AgentMessage.fromMap(doc.data()))
+            .toList();
+      } else {
+        snapshots = await ref.orderBy('generatedAt').get();
+        if (snapshots.docs.isEmpty) return [];
+        return snapshots.docs
+            .map((doc) => AgentMessage.fromMap(doc.data()))
+            .toList();
+      }
+    } on AgenixException {
+      rethrow;
+    } catch (e, st) {
+      throw DataStoreException('Error fetching recent messages', cause: e, causeStack: st);
     }
   }
 
@@ -101,7 +140,7 @@ class FirebaseDataStore extends DataStore {
     Object? metaData,
   }) async {
     try {
-      final userId = _auth.currentUser!.uid;
+      final userId = _resolveUserId();
       final ref =
           _firestore
               .collection('chats')
@@ -133,8 +172,10 @@ class FirebaseDataStore extends DataStore {
             'lastMessageTime': payload['generatedAt'],
             'conversationId': conversationId,
           }, SetOptions(merge: true));
-    } catch (e) {
-      throw Exception('Error saving message: $e');
+    } on AgenixException {
+      rethrow;
+    } catch (e, st) {
+      throw DataStoreException('Error saving message', cause: e, causeStack: st);
     }
   }
 }

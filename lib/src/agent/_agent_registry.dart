@@ -1,45 +1,35 @@
 // Internal file, not part of the Public API
+// Thin shim that delegates to AgentScope for backward compatibility.
 
 part of 'agent.dart';
 
 class _AgentRegistry {
-  // Private constructor
   _AgentRegistry._internal();
 
-  // Singleton instance
   static final _AgentRegistry _instance = _AgentRegistry._internal();
-
-  // Accessor for the singleton instance
   static _AgentRegistry get instance => _instance;
 
-  final Map<String, Agent> _agents = {};
-
-  /// This method should be called whenever developers make a new tool.
-  /// It registers the tool in the registry.
-  /// If you miss this step, the tool won't be available for use.
-  void registerAgent(Agent agent) {
-    if (hasAgent(agent.name)) {
-      throw Exception(
-        'Agent with name ${agent.name} already exists. Do not register the same agent twice. Use a different name.',
-      );
-    }
-    _agents[agent.name] = agent;
+  /// Registers an agent into its scope.
+  void registerAgent(
+    Agent agent, {
+    RegistrationPolicy policy = RegistrationPolicy.throwIfExists,
+  }) {
+    agent._scope.registerAgent(agent.name, agent, policy: policy);
   }
 
-  /// This method gets an agent by its name.
-  /// It is used by the agent to find other agents if required
-  Agent? getAgent(String agentName) {
-    return _agents[agentName];
+  /// Returns the agent registered under [agentName] in the given [scope],
+  /// or in the global scope if none is specified.
+  Agent? getAgent(String agentName, {AgentScope? scope}) {
+    return (scope ?? AgentScope.global).getAgent(agentName) as Agent?;
   }
 
-  /// This method gets all the agents in the registry.
-  /// It is used by prompt builders to list all available tools.
-  List<Agent> getAllAgents() {
-    return _agents.values.toList();
+  /// Returns all agents in the given [scope], or in the global scope.
+  List<Agent> getAllAgents({AgentScope? scope}) {
+    return (scope ?? AgentScope.global).getAllAgents().cast<Agent>();
   }
 
-  /// This method checks if an agent is registered in the registry.
-  bool hasAgent(String toolName) {
-    return _agents.containsKey(toolName);
+  /// Unregisters an agent from its scope.
+  void unregisterAgent(Agent agent) {
+    agent._scope.unregisterAgent(agent.name);
   }
 }

@@ -39,7 +39,7 @@ class Conversation {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'lastMessage': lastMessage,
-      'lastMessageTime': lastMessageTime.microsecondsSinceEpoch,
+      'lastMessageTime': lastMessageTime.millisecondsSinceEpoch,
       'conversationId': conversationId,
     };
   }
@@ -48,7 +48,7 @@ class Conversation {
   factory Conversation.fromMap(Map<String, dynamic> map) {
     return Conversation(
       lastMessage: map['lastMessage'] as String,
-      lastMessageTime: DateTime.fromMicrosecondsSinceEpoch(
+      lastMessageTime: DateTime.fromMillisecondsSinceEpoch(
         map['lastMessageTime'] as int,
       ),
       conversationId: map['conversationId'] as String,

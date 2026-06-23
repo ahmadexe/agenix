@@ -30,6 +30,14 @@ class Agent {
   /// This is the role of your agent, make it very descriptive because based on the description provided in role agents will be able to communicate with each other.
   final String role;
 
+  /// Controls whether the agent throws typed exceptions or returns a graceful error message.
+  final FailureMode failureMode;
+
+  /// Optional callback invoked when an error occurs, regardless of failure mode.
+  final void Function(AgenixException error, StackTrace stack)? onError;
+
+  final AgentScope _scope;
+
   Agent._internal({
     required this.llm,
     required _MemoryManager memoryManager,
@@ -37,17 +45,33 @@ class Agent {
     required this.toolRegistry,
     required this.name,
     required this.role,
+    required this.failureMode,
+    required AgentScope scope,
+    this.onError,
   }) : _memoryManager = memoryManager,
-       _promptBuilder = promptBuilder;
+       _promptBuilder = promptBuilder,
+       _scope = scope;
 
   /// Async factory constructor to create an instance with loaded system data.
+  ///
+  /// [scope] controls which group of agents this agent can discover and chain
+  /// to. Defaults to [AgentScope.global].
+  ///
+  /// [registrationPolicy] controls what happens when an agent with the same
+  /// [name] already exists in the scope. Defaults to
+  /// [RegistrationPolicy.throwIfExists].
   static Future<Agent> create({
     required DataStore dataStore,
     required LLM llm,
     required String name,
     required String role,
     String pathToSystemData = 'assets/system_data.json',
+    FailureMode failureMode = FailureMode.gracefulMessage,
+    void Function(AgenixException error, StackTrace stack)? onError,
+    AgentScope? scope,
+    RegistrationPolicy registrationPolicy = RegistrationPolicy.throwIfExists,
   }) async {
+    final resolvedScope = scope ?? AgentScope.global;
     final systemData = await _loadSystemData(pathToSystemData);
     final registry = ToolRegistry();
     final agent = Agent._internal(
@@ -56,22 +80,43 @@ class Agent {
       promptBuilder: _PromptBuilder(
         systemPrompt: systemData,
         registry: registry,
+        scope: resolvedScope,
       ),
       toolRegistry: registry,
       name: name,
       role: role,
+      failureMode: failureMode,
+      onError: onError,
+      scope: resolvedScope,
     );
 
-    _AgentRegistry.instance.registerAgent(agent);
+    _AgentRegistry.instance.registerAgent(agent, policy: registrationPolicy);
     return agent;
+  }
+
+  /// Unregisters this agent from its scope, releasing it for re-creation.
+  void dispose() {
+    _AgentRegistry.instance.unregisterAgent(this);
   }
 
   static Future<Map<String, dynamic>> _loadSystemData(String path) async {
     try {
       final raw = await rootBundle.loadString(path);
-      return json.decode(raw);
-    } catch (e) {
-      throw Exception('Failed to load system data from $path: $e');
+      final decoded = json.decode(raw);
+      if (decoded is! Map<String, dynamic>) {
+        throw ConfigException(
+          'System data at $path must be a JSON object, got ${decoded.runtimeType}',
+        );
+      }
+      return decoded;
+    } on AgenixException {
+      rethrow;
+    } catch (e, st) {
+      throw ConfigException(
+        'Failed to load system data from $path',
+        cause: e,
+        causeStack: st,
+      );
     }
   }
 
@@ -82,18 +127,40 @@ class Agent {
     int memoryLimit = 10,
     Object? metaData,
   }) async {
-    _memoryManager.saveMessage(convoId, userMessage, metaData: metaData);
-    
-    final response = await _generateResponse(
-      convoId: convoId,
-      userMessage: userMessage,
-      memoryLimit: memoryLimit,
-      metaData: metaData,
-      isPartOfChain: false,
-    );
+    try {
+      final response = await _generateResponse(
+        convoId: convoId,
+        userMessage: userMessage,
+        memoryLimit: memoryLimit,
+        metaData: metaData,
+        isPartOfChain: false,
+      );
 
-    await _memoryManager.saveMessage(convoId, response, metaData: metaData);
-    return response;
+      // Save both messages after generation so the user message isn't
+      // duplicated in the context that was just sent to the LLM.
+      await _memoryManager.saveMessage(convoId, userMessage, metaData: metaData);
+      await _memoryManager.saveMessage(convoId, response, metaData: metaData);
+      return response;
+    } on AgenixException catch (e, st) {
+      onError?.call(e, st);
+      if (failureMode == FailureMode.throwError) rethrow;
+      return AgentMessage(
+        content: kLLMResponseOnFailure,
+        isFromAgent: true,
+        generatedAt: DateTime.now(),
+        isError: true,
+      );
+    } catch (e, st) {
+      final wrapped = LlmException('Unexpected error: $e', cause: e, causeStack: st);
+      onError?.call(wrapped, st);
+      if (failureMode == FailureMode.throwError) throw wrapped;
+      return AgentMessage(
+        content: kLLMResponseOnFailure,
+        isFromAgent: true,
+        generatedAt: DateTime.now(),
+        isError: true,
+      );
+    }
   }
 
   Future<AgentMessage> _generateResponse({
@@ -103,111 +170,207 @@ class Agent {
     Object? metaData,
     bool isPartOfChain = false,
     String? input,
+    Set<String>? chainVisited,
+    int chainDepth = 0,
   }) async {
-    try {
-      final memoryMessages = await _memoryManager.getContext(
-        convoId,
-        metaData: metaData,
+    final memoryMessages = await _memoryManager.getContext(
+      convoId,
+      limit: memoryLimit,
+      metaData: metaData,
+    );
+
+    final prompt = _promptBuilder.buildTextPrompt(
+      memoryMessages: memoryMessages,
+      userMessage: userMessage,
+      isPartOfChain: isPartOfChain,
+      input: input,
+    );
+
+    // Accumulated tool observations for multi-step tool use.
+    final observations = <Map<String, dynamic>>[];
+    var currentPrompt = prompt;
+    var isFirstCall = true;
+
+    for (var step = 0; step < kMaxToolIterations; step++) {
+      final parsed = await _llmGenerateWithParseRetry(
+        prompt: currentPrompt,
+        rawData: isFirstCall ? userMessage.imageData : null,
       );
+      isFirstCall = false;
 
-      final prompt = _promptBuilder.buildTextPrompt(
-        memoryMessages: memoryMessages,
-        userMessage: userMessage,
-        isPartOfChain: isPartOfChain,
-        input: input,
-      );
+      switch (parsed.outcome) {
+        case ParseOutcome.response:
+          final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
+          return AgentMessage(
+            content: response,
+            isFromAgent: true,
+            generatedAt: DateTime.now(),
+            data: observations.isNotEmpty ? {'observations': observations} : null,
+          );
 
-      final String rawLLMResponse = await llm.generate(
-        prompt: prompt,
-        rawData: userMessage.imageData,
-      );
-
-      final parsed = _promptParser.parse(rawLLMResponse);
-      // If the parsed data contains no agents or tools, return the fallback response
-      if (parsed.agentNames.isEmpty && parsed.toolNames.isEmpty) {
-        final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
-        final botResponse = AgentMessage(
-          content: response,
-          isFromAgent: true,
-          generatedAt: DateTime.now(),
-        );
-
-        return botResponse;
-      }
-
-      // If a task requires multiple agents to be engaged, we handle that here
-      if (parsed.agentNames.isNotEmpty) {
-        List<String> agentsChain = parsed.agentNames;
-        String? inputForNextStep;
-        AgentMessage? agentResponse;
-        while (agentsChain.isNotEmpty) {
-          final agentName = agentsChain.removeAt(0);
-          final agent = _AgentRegistry.instance.getAgent(agentName);
-
-          if (agent == null) {
-            return AgentMessage(
-              content: kLLMResponseOnFailure,
-              isFromAgent: true,
-              generatedAt: DateTime.now(),
-            );
-          }
-
-          agentResponse = await agent._generateResponse(
+        case ParseOutcome.agentsChain:
+          return _handleAgentChain(
+            parsed: parsed,
             convoId: convoId,
             userMessage: userMessage,
             memoryLimit: memoryLimit,
             metaData: metaData,
-            isPartOfChain: true,
-            input: inputForNextStep,
+            visited: chainVisited,
+            depth: chainDepth,
           );
 
-          inputForNextStep =
-              agentResponse.data != null
-                  ? agentResponse.data!.toString()
-                  : agentResponse.content;
-        }
+        case ParseOutcome.tools:
+          final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
 
-        return agentResponse!;
-      } else {
-        final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
-        final response = toolResponses.map((r) => r.message).join('\n');
+          for (final r in toolResponses) {
+            observations.add({
+              'tool': r.toolName,
+              'success': r.isRequestSuccessful,
+              'message': r.message,
+              if (r.data != null) 'data': r.data,
+            });
+          }
 
-        final needsFurtherReasoning = toolResponses.any(
-          (r) => r.needsFurtherReasoning,
-        );
-
-        if (needsFurtherReasoning) {
-          final originalPrompt = userMessage.content;
-          final rawData = toolResponses.map((r) => r.data).join('\n');
-
-          final processedResponse = await _reasonUsingData(
-            originalPrompt,
-            response,
-            rawData,
+          final needsFurtherReasoning = toolResponses.any(
+            (r) => r.needsFurtherReasoning,
           );
 
-          return processedResponse;
-        }
+          if (needsFurtherReasoning) {
+            return _reasonUsingData(
+              userMessage.content,
+              toolResponses,
+            );
+          }
 
-        final botMessage = AgentMessage(
-          content: response.isEmpty ? kLLMResponseOnFailure : response,
-          isFromAgent: true,
-          generatedAt: DateTime.now(),
-          data:
-              toolResponses.isNotEmpty
-                  ? {'tools': toolResponses.map((r) => r.data).toList()}
-                  : null,
-        );
+          // Build a follow-up prompt with observations so the LLM can
+          // decide whether to call more tools or produce a final response.
+          currentPrompt = _buildObservationPrompt(
+            originalPrompt: prompt,
+            observations: observations,
+          );
 
-        return botMessage;
+        case ParseOutcome.unparseable:
+          // All parse retries exhausted in _llmGenerateWithParseRetry
+          throw ResponseParseException(
+            'LLM output remained unparseable after retries',
+            rawOutput: parsed.rawOutput ?? '',
+          );
       }
-    } catch (e) {
+    }
+
+    // Max iterations reached — synthesize from what we have
+    if (observations.isNotEmpty) {
+      final summary = observations.map((o) => o['message'] ?? '').join('\n');
       return AgentMessage(
-        content: kLLMResponseOnFailure,
+        content: summary.isEmpty ? kLLMResponseOnFailure : summary,
         isFromAgent: true,
         generatedAt: DateTime.now(),
+        data: {'observations': observations},
       );
     }
+
+    return AgentMessage(
+      content: kLLMResponseOnFailure,
+      isFromAgent: true,
+      generatedAt: DateTime.now(),
+    );
+  }
+
+  /// Calls the LLM and retries with a corrective instruction on parse failure.
+  Future<PromptParserResult> _llmGenerateWithParseRetry({
+    required String prompt,
+    Uint8List? rawData,
+  }) async {
+    var currentPrompt = prompt;
+    for (var attempt = 0; attempt <= kMaxParseRetries; attempt++) {
+      final raw = await llm.generate(
+        prompt: currentPrompt,
+        rawData: attempt == 0 ? rawData : null,
+      );
+      final parsed = _promptParser.parse(raw);
+      if (parsed.outcome != ParseOutcome.unparseable) return parsed;
+
+      // Append corrective instruction for retry
+      currentPrompt = '$prompt\n\n$kParseRetryInstruction';
+    }
+
+    // Return unparseable after all retries exhausted
+    return PromptParserResult(
+      outcome: ParseOutcome.unparseable,
+      agentNames: [],
+      toolNames: [],
+      params: {},
+      rawOutput: currentPrompt,
+    );
+  }
+
+  String _buildObservationPrompt({
+    required String originalPrompt,
+    required List<Map<String, dynamic>> observations,
+  }) {
+    final observationJson = json.encode(observations);
+    return '$originalPrompt\n\n'
+        'Tool observations so far:\n$observationJson\n\n'
+        'Based on these observations, either call more tools if needed or '
+        'provide a final response in JSON format.';
+  }
+
+  Future<AgentMessage> _handleAgentChain({
+    required PromptParserResult parsed,
+    required String convoId,
+    required AgentMessage userMessage,
+    required int memoryLimit,
+    Object? metaData,
+    Set<String>? visited,
+    int depth = 0,
+  }) async {
+    List<String> agentsChain = parsed.agentNames;
+    String? inputForNextStep;
+    AgentMessage? agentResponse;
+    final visitedSet = visited ?? <String>{name};
+
+    while (agentsChain.isNotEmpty) {
+      final agentName = agentsChain.removeAt(0);
+
+      if (visitedSet.contains(agentName)) {
+        throw ConfigException(
+          'Cycle detected in agent chain: $agentName has already been visited '
+          '(path: ${visitedSet.join(" → ")} → $agentName)',
+        );
+      }
+
+      if (depth >= kMaxChainDepth) {
+        throw ConfigException(
+          'Agent chain depth limit ($kMaxChainDepth) exceeded at agent $agentName',
+        );
+      }
+
+      final agent = _AgentRegistry.instance.getAgent(agentName, scope: _scope);
+
+      if (agent == null) {
+        throw AgentNotFoundException(agentName);
+      }
+
+      visitedSet.add(agentName);
+
+      agentResponse = await agent._generateResponse(
+        convoId: convoId,
+        userMessage: userMessage,
+        memoryLimit: memoryLimit,
+        metaData: metaData,
+        isPartOfChain: true,
+        input: inputForNextStep,
+        chainVisited: visitedSet,
+        chainDepth: depth + 1,
+      );
+
+      inputForNextStep =
+          agentResponse.data != null
+              ? json.encode(agentResponse.data)
+              : agentResponse.content;
+    }
+
+    return agentResponse!;
   }
 
   /// Get messages for a specific conversation from the datastore.
@@ -223,11 +386,9 @@ class Agent {
 
   /// Get all conversations from the datastore.
   Future<List<Conversation>> getAllConversations({
-    required String conversationId,
     Object? metaData,
   }) {
     return _memoryManager.dataStore.getConversations(
-      conversationId,
       metaData: metaData,
     );
   }
@@ -243,21 +404,29 @@ class Agent {
     );
   }
 
-  // The method is executed if further reasoning is required over the responses by the tools
   Future<AgentMessage> _reasonUsingData(
     String originalPrompt,
-    String response,
-    String rawData,
+    List<ToolResponse> toolResponses,
   ) async {
+    final toolData = toolResponses.map((r) => {
+      'tool': r.toolName,
+      'message': r.message,
+      if (r.data != null) 'data': r.data,
+    }).toList();
+
     final result = await llm.generate(
       prompt:
-          "Keep the answer to the point but natural, only answer what is asked in the original prompt using this information: $response, and data: $rawData. Original prompt: $originalPrompt",
+          'Keep the answer to the point but natural, only answer what is asked '
+          'in the original prompt using this data.\n\n'
+          'Tool results: ${json.encode(toolData)}\n\n'
+          'Original prompt: $originalPrompt',
     );
 
     return AgentMessage(
       content: result,
       isFromAgent: true,
       generatedAt: DateTime.now(),
+      data: {'tools': toolData},
     );
   }
 

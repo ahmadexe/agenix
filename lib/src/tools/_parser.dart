@@ -1,68 +1,114 @@
 import 'dart:convert';
 
-/// The parser is responsible for interpreting the output from the LLM.
-/// The output is in JSON format and can contain either a response or a list of tools to be executed.
-/// The parser will extract the tool names and parameters from the JSON output.
-/// It will also handle the case where the LLM asks for parameters to be provided.
-/// The parser will throw an exception if the output is not in the expected format.
+/// The intent of the parsed LLM output.
+enum ParseOutcome {
+  /// The LLM produced a direct text response.
+  response,
+
+  /// The LLM requested one or more tools to be executed.
+  tools,
+
+  /// The LLM requested delegation to a chain of agents.
+  agentsChain,
+
+  /// The LLM output could not be parsed into any known shape.
+  unparseable,
+}
+
+/// The result of parsing a raw LLM output string.
 class PromptParserResult {
-  /// Name of the agents that need to be engaged for the task at hand
+  /// The parsed intent of this result.
+  final ParseOutcome outcome;
+
+  /// Name of the agents that need to be engaged for the task at hand.
   final List<String> agentNames;
 
-  /// toolNames is a list of names of tools that the LLM has requested to execute.
+  /// Tool names that the LLM has requested to execute.
   final List<String> toolNames;
 
-  /// params is a map of tool names to their parameters, some tools may not have parameters.
+  /// A map of tool names to their parameters.
   final Map<String, Map<String, dynamic>> params;
 
-  /// fallbackResponse is an optional response that the LLM has provided, if fallback response is provided, it will be used instead of executing tools.
+  /// The text response from the LLM, when [outcome] is [ParseOutcome.response].
   final String? fallbackResponse;
 
-  /// Constructs a PromptParserResult with the tool names, parameters, and an optional fallback response.
+  /// The raw LLM output string, preserved for retry/debug purposes.
+  final String? rawOutput;
+
+  /// Constructs a PromptParserResult.
   PromptParserResult({
+    required this.outcome,
     required this.agentNames,
     required this.toolNames,
     required this.params,
     this.fallbackResponse,
+    this.rawOutput,
   });
 }
 
-/// The PromptParser class is responsible for parsing the output from the LLM.
+/// Parses the raw JSON output from the LLM into a structured result.
 class PromptParser {
-  /// Parses the LLM output JSON string and returns a PromptParserResult.
+  /// Parses the LLM output and returns a [PromptParserResult].
+  ///
+  /// Never throws on shape variance — returns [ParseOutcome.unparseable] instead.
   PromptParserResult parse(String llmOutputJson) {
     final data = llmOutputJson.trim();
-    final Map<String, dynamic> parsed = _tryJsonDecode(data);
-    // The first check should of agents, if this task requires multiple systems to be engaged.
-    if (parsed.containsKey("agents_chain")) {
-      final result = PromptParserResult(
-        agentNames: (parsed["agents_chain"] as List<dynamic>).cast<String>(),
-        toolNames: [],
-        params: {},
-      );
+    final Map<String, dynamic>? parsed = _tryJsonDecode(data);
 
-      return result;
-    }
-    // Check if the parsed data contains a "response" key
-    // If it does, return the response as a fallback
-    // If it doesn't, check if it contains a "tools" key
-    // If it does, extract the tool names and parameters
-    // If it doesn't, throw an exception
-    // indicating that the format is unrecognized
-    if (parsed.containsKey("response")) {
+    if (parsed == null) {
       return PromptParserResult(
+        outcome: ParseOutcome.unparseable,
         agentNames: [],
         toolNames: [],
         params: {},
-        fallbackResponse: parsed["response"],
+        rawOutput: llmOutputJson,
       );
-    } else if (parsed.containsKey("tools")) {
-      final tools =
-          (parsed["tools"] as String)
-              .split(',')
-              .map((t) => t.trim())
-              .where((t) => t.isNotEmpty)
-              .toList();
+    }
+
+    // Agent chain
+    if (parsed.containsKey("agents_chain")) {
+      final raw = parsed["agents_chain"];
+      final List<String> names;
+      if (raw is List) {
+        names = raw.map((e) => e.toString()).toList();
+      } else if (raw is String) {
+        names = [raw];
+      } else {
+        return _unparseable(llmOutputJson);
+      }
+      return PromptParserResult(
+        outcome: ParseOutcome.agentsChain,
+        agentNames: names,
+        toolNames: [],
+        params: {},
+        rawOutput: llmOutputJson,
+      );
+    }
+
+    // Direct response
+    if (parsed.containsKey("response")) {
+      return PromptParserResult(
+        outcome: ParseOutcome.response,
+        agentNames: [],
+        toolNames: [],
+        params: {},
+        fallbackResponse: parsed["response"]?.toString(),
+        rawOutput: llmOutputJson,
+      );
+    }
+
+    // Tool invocation
+    if (parsed.containsKey("tools")) {
+      final rawTools = parsed["tools"];
+      final List<String> tools;
+      if (rawTools is String) {
+        tools =
+            rawTools.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+      } else if (rawTools is List) {
+        tools = rawTools.map((e) => e.toString().trim()).where((t) => t.isNotEmpty).toList();
+      } else {
+        return _unparseable(llmOutputJson);
+      }
 
       final rawParams = parsed["parameters"];
       final Map<String, dynamic> rawParamsMap =
@@ -70,29 +116,52 @@ class PromptParser {
 
       final Map<String, Map<String, dynamic>> params = {
         for (String tool in tools)
-          tool: Map<String, dynamic>.from(rawParamsMap[tool] ?? {}),
+          tool: rawParamsMap[tool] is Map
+              ? Map<String, dynamic>.from(rawParamsMap[tool])
+              : <String, dynamic>{},
       };
 
       return PromptParserResult(
+        outcome: ParseOutcome.tools,
         toolNames: tools,
         params: params,
         agentNames: [],
+        rawOutput: llmOutputJson,
       );
-    } else {
-      throw Exception("Unrecognized format");
     }
+
+    return _unparseable(llmOutputJson);
   }
 
-  /// Attempts to decode a JSON string.
-  /// If the string is not valid JSON, it throws an exception.
-  /// This method is used to handle the case where the LLM output is not in the expected format.
-  Map<String, dynamic> _tryJsonDecode(String data) {
+  PromptParserResult _unparseable(String raw) => PromptParserResult(
+    outcome: ParseOutcome.unparseable,
+    agentNames: [],
+    toolNames: [],
+    params: {},
+    rawOutput: raw,
+  );
+
+  /// Attempts to decode a JSON string, returning null on failure instead of throwing.
+  Map<String, dynamic>? _tryJsonDecode(String data) {
+    // Strip markdown fences
+    data = data.replaceAll(RegExp(r'```(?:json)?', multiLine: true), '').trim();
+
     try {
-      data = data.replaceFirst(RegExp(r'```json'), '');
-      data = data.replaceFirst(RegExp(r'```'), '');
-      return json.decode(data);
-    } catch (e) {
-      throw Exception("Invalid JSON output from LLM: $e");
+      final decoded = json.decode(data);
+      if (decoded is Map<String, dynamic>) return decoded;
+      return null;
+    } catch (_) {
+      // Fallback: extract the first balanced JSON object from prose
+      final start = data.indexOf('{');
+      final end = data.lastIndexOf('}');
+      if (start == -1 || end == -1 || end <= start) return null;
+      try {
+        final decoded = json.decode(data.substring(start, end + 1));
+        if (decoded is Map<String, dynamic>) return decoded;
+        return null;
+      } catch (_) {
+        return null;
+      }
     }
   }
 }

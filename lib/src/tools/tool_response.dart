@@ -19,13 +19,13 @@ class ToolResponse {
   /// This is the message the end user will see, if the tools fetches some data, add the info here or success or failure messages based on the request.
   final String message;
 
-  /// Optional data returned by the tool. This will be used for chaining responses in later versios.
+  /// Optional data returned by the tool, used for agent chaining and further reasoning.
   final Map<String, dynamic>? data;
 
   /// If a tool has fetched data and the data requires further reasoning or processing,
   /// this flag can be set to true. This is useful for tools that need to perform additional reasoning
   /// or processing before returning a final result to the user.
-  bool needsFurtherReasoning;
+  final bool needsFurtherReasoning;
 
   /// Constructs a ToolResponse with the tool name, success status, message, and optional data.
   ToolResponse({
@@ -61,6 +61,7 @@ class ToolResponse {
       'isRequestSuccessful': isRequestSuccessful,
       'message': message,
       'data': data,
+      'needsFurtherReasoning': needsFurtherReasoning,
     };
   }
 
@@ -102,6 +103,6 @@ class ToolResponse {
       toolName.hashCode ^
       isRequestSuccessful.hashCode ^
       message.hashCode ^
-      data.hashCode ^
+      (data != null ? Object.hashAll(data!.entries) : 0) ^
       needsFurtherReasoning.hashCode;
 }

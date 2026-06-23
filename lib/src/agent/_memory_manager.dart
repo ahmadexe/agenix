@@ -17,9 +17,9 @@ class _MemoryManager {
 
   Future<List<AgentMessage>> getContext(
     String convoId, {
+    int? limit,
     Object? metaData,
   }) async {
-    // TODO: Generate efficient graph based context
-    return await dataStore.getMessages(convoId, metaData: metaData);
+    return await dataStore.getMessages(convoId, limit: limit, metaData: metaData);
   }
 }

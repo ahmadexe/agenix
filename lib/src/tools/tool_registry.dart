@@ -1,8 +1,9 @@
+import 'package:agenix/src/static/agenix_exceptions.dart';
+
 import 'tool.dart';
 
-/// Tool Registry for managing tools in the application.
-/// It allows for registering, unregistering, and retrieving tools.
-/// The ToolRegistry is a singleton class that maintains a map of tool names to tool instances.
+/// Tool Registry for managing tools available to a single agent.
+/// Each agent owns its own [ToolRegistry] instance.
 /// It provides methods to register a tool, unregister a tool, get a tool by name, and check if a tool exists.
 class ToolRegistry {
   final Map<String, Tool> _tools = {};
@@ -12,7 +13,7 @@ class ToolRegistry {
   /// If you miss this step, the tool won't be available for use.
   void registerTool(Tool tool) {
     if (hasTool(tool.name)) {
-      throw Exception(
+      throw ConfigException(
         'Tool with name ${tool.name} already exists. Do not register the same tool twice. Use a different name.',
       );
     }
