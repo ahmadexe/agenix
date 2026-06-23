@@ -15,9 +15,22 @@ import 'package:uuid/uuid.dart';
 /// This allows for easy swapping of data stores without changing the core logic of the agent's memory management.
 /// To use this data store, you need to initialize Firebase in your app and provide the necessary configuration.
 class FirebaseDataStore extends DataStore {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  final FirebaseStorage _storage;
+
+  /// Creates a [FirebaseDataStore].
+  ///
+  /// Accepts optional Firebase instances for dependency injection (e.g.
+  /// using `fake_cloud_firestore` / `firebase_auth_mocks` in tests).
+  /// Defaults to the standard singleton instances.
+  FirebaseDataStore({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+    FirebaseStorage? storage,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance,
+        _storage = storage ?? FirebaseStorage.instance;
 
   String _resolveUserId() {
     final user = _auth.currentUser;
@@ -57,8 +70,7 @@ class FirebaseDataStore extends DataStore {
   }
 
   @override
-  Future<List<Conversation>> getConversations(
-    String conversationId, {
+  Future<List<Conversation>> getConversations({
     Object? metaData,
   }) async {
     try {

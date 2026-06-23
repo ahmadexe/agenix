@@ -388,11 +388,9 @@ class Agent {
 
   /// Get all conversations from the datastore.
   Future<List<Conversation>> getAllConversations({
-    required String conversationId,
     Object? metaData,
   }) {
     return _memoryManager.dataStore.getConversations(
-      conversationId,
       metaData: metaData,
     );
   }
