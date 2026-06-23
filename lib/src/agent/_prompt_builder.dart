@@ -49,7 +49,7 @@ class _PromptBuilder {
       buffer.writeln("Tools: ");
       for (final tool in tools) {
         buffer.writeln(
-          "{${tool.name}: Description: ${tool.description}, Parameters: ${tool.parameters?.map((e) => e!.toJson())}},",
+          "{${tool.name}: Description: ${tool.description}, Parameters: ${tool.parameters.map((e) => e.toJson()).toList()}},",
         );
       }
     } else {

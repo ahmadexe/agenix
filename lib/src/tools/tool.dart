@@ -16,11 +16,15 @@ abstract class Tool {
   final String description;
 
   /// The parameters that the tool accepts.
-  final List<ParameterSpecification?>? parameters;
+  final List<ParameterSpecification> parameters;
 
   /// Constructs a Tool with the required fields.
-  Tool({required this.name, required this.description, this.parameters});
+  Tool({
+    required this.name,
+    required this.description,
+    this.parameters = const [],
+  });
 
-  /// Returns a JSON representation of the tool.
+  /// Executes the tool with the given validated parameters.
   Future<ToolResponse> run(Map<String, dynamic> params);
 }

@@ -184,83 +184,170 @@ class Agent {
       input: input,
     );
 
-    final String rawLLMResponse = await llm.generate(
-      prompt: prompt,
-      rawData: userMessage.imageData,
-    );
+    // Accumulated tool observations for multi-step tool use.
+    final observations = <Map<String, dynamic>>[];
+    var currentPrompt = prompt;
+    var isFirstCall = true;
 
-    final parsed = _promptParser.parse(rawLLMResponse);
+    for (var step = 0; step < kMaxToolIterations; step++) {
+      final rawLLMResponse = await _llmGenerateWithParseRetry(
+        prompt: currentPrompt,
+        rawData: isFirstCall ? userMessage.imageData : null,
+      );
+      isFirstCall = false;
 
-    if (parsed.agentNames.isEmpty && parsed.toolNames.isEmpty) {
-      final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
+      final parsed = rawLLMResponse;
+
+      switch (parsed.outcome) {
+        case ParseOutcome.response:
+          final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
+          return AgentMessage(
+            content: response,
+            isFromAgent: true,
+            generatedAt: DateTime.now(),
+            data: observations.isNotEmpty ? {'observations': observations} : null,
+          );
+
+        case ParseOutcome.agentsChain:
+          return _handleAgentChain(
+            parsed: parsed,
+            convoId: convoId,
+            userMessage: userMessage,
+            memoryLimit: memoryLimit,
+            metaData: metaData,
+          );
+
+        case ParseOutcome.tools:
+          final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
+
+          for (final r in toolResponses) {
+            observations.add({
+              'tool': r.toolName,
+              'success': r.isRequestSuccessful,
+              'message': r.message,
+              if (r.data != null) 'data': r.data,
+            });
+          }
+
+          final needsFurtherReasoning = toolResponses.any(
+            (r) => r.needsFurtherReasoning,
+          );
+
+          if (needsFurtherReasoning) {
+            return _reasonUsingData(
+              userMessage.content,
+              toolResponses,
+            );
+          }
+
+          // Build a follow-up prompt with observations so the LLM can
+          // decide whether to call more tools or produce a final response.
+          currentPrompt = _buildObservationPrompt(
+            originalPrompt: prompt,
+            observations: observations,
+          );
+
+        case ParseOutcome.unparseable:
+          // All parse retries exhausted in _llmGenerateWithParseRetry
+          throw ResponseParseException(
+            'LLM output remained unparseable after retries',
+            rawOutput: parsed.rawOutput ?? '',
+          );
+      }
+    }
+
+    // Max iterations reached — synthesize from what we have
+    if (observations.isNotEmpty) {
+      final summary = observations.map((o) => o['message'] ?? '').join('\n');
       return AgentMessage(
-        content: response,
+        content: summary.isEmpty ? kLLMResponseOnFailure : summary,
         isFromAgent: true,
         generatedAt: DateTime.now(),
+        data: {'observations': observations},
       );
     }
 
-    if (parsed.agentNames.isNotEmpty) {
-      List<String> agentsChain = parsed.agentNames;
-      String? inputForNextStep;
-      AgentMessage? agentResponse;
-      while (agentsChain.isNotEmpty) {
-        final agentName = agentsChain.removeAt(0);
-        final agent = _AgentRegistry.instance.getAgent(agentName, scope: _scope);
+    return AgentMessage(
+      content: kLLMResponseOnFailure,
+      isFromAgent: true,
+      generatedAt: DateTime.now(),
+    );
+  }
 
-        if (agent == null) {
-          throw AgentNotFoundException(agentName);
-        }
-
-        agentResponse = await agent._generateResponse(
-          convoId: convoId,
-          userMessage: userMessage,
-          memoryLimit: memoryLimit,
-          metaData: metaData,
-          isPartOfChain: true,
-          input: inputForNextStep,
-        );
-
-        inputForNextStep =
-            agentResponse.data != null
-                ? agentResponse.data!.toString()
-                : agentResponse.content;
-      }
-
-      return agentResponse!;
-    } else {
-      final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
-      final response = toolResponses.map((r) => r.message).join('\n');
-
-      final needsFurtherReasoning = toolResponses.any(
-        (r) => r.needsFurtherReasoning,
+  /// Calls the LLM and retries with a corrective instruction on parse failure.
+  Future<PromptParserResult> _llmGenerateWithParseRetry({
+    required String prompt,
+    Uint8List? rawData,
+  }) async {
+    var currentPrompt = prompt;
+    for (var attempt = 0; attempt <= kMaxParseRetries; attempt++) {
+      final raw = await llm.generate(
+        prompt: currentPrompt,
+        rawData: attempt == 0 ? rawData : null,
       );
+      final parsed = _promptParser.parse(raw);
+      if (parsed.outcome != ParseOutcome.unparseable) return parsed;
 
-      if (needsFurtherReasoning) {
-        final originalPrompt = userMessage.content;
-        final rawData = toolResponses.map((r) => r.data).join('\n');
-
-        final processedResponse = await _reasonUsingData(
-          originalPrompt,
-          response,
-          rawData,
-        );
-
-        return processedResponse;
-      }
-
-      final botMessage = AgentMessage(
-        content: response.isEmpty ? kLLMResponseOnFailure : response,
-        isFromAgent: true,
-        generatedAt: DateTime.now(),
-        data:
-            toolResponses.isNotEmpty
-                ? {'tools': toolResponses.map((r) => r.data).toList()}
-                : null,
-      );
-
-      return botMessage;
+      // Append corrective instruction for retry
+      currentPrompt = '$prompt\n\n$kParseRetryInstruction';
     }
+
+    // Return unparseable after all retries exhausted
+    return PromptParserResult(
+      outcome: ParseOutcome.unparseable,
+      agentNames: [],
+      toolNames: [],
+      params: {},
+      rawOutput: currentPrompt,
+    );
+  }
+
+  String _buildObservationPrompt({
+    required String originalPrompt,
+    required List<Map<String, dynamic>> observations,
+  }) {
+    final observationJson = json.encode(observations);
+    return '$originalPrompt\n\n'
+        'Tool observations so far:\n$observationJson\n\n'
+        'Based on these observations, either call more tools if needed or '
+        'provide a final response in JSON format.';
+  }
+
+  Future<AgentMessage> _handleAgentChain({
+    required PromptParserResult parsed,
+    required String convoId,
+    required AgentMessage userMessage,
+    required int memoryLimit,
+    Object? metaData,
+  }) async {
+    List<String> agentsChain = parsed.agentNames;
+    String? inputForNextStep;
+    AgentMessage? agentResponse;
+
+    while (agentsChain.isNotEmpty) {
+      final agentName = agentsChain.removeAt(0);
+      final agent = _AgentRegistry.instance.getAgent(agentName, scope: _scope);
+
+      if (agent == null) {
+        throw AgentNotFoundException(agentName);
+      }
+
+      agentResponse = await agent._generateResponse(
+        convoId: convoId,
+        userMessage: userMessage,
+        memoryLimit: memoryLimit,
+        metaData: metaData,
+        isPartOfChain: true,
+        input: inputForNextStep,
+      );
+
+      inputForNextStep =
+          agentResponse.data != null
+              ? json.encode(agentResponse.data)
+              : agentResponse.content;
+    }
+
+    return agentResponse!;
   }
 
   /// Get messages for a specific conversation from the datastore.
@@ -296,21 +383,29 @@ class Agent {
     );
   }
 
-  // The method is executed if further reasoning is required over the responses by the tools
   Future<AgentMessage> _reasonUsingData(
     String originalPrompt,
-    String response,
-    String rawData,
+    List<ToolResponse> toolResponses,
   ) async {
+    final toolData = toolResponses.map((r) => {
+      'tool': r.toolName,
+      'message': r.message,
+      if (r.data != null) 'data': r.data,
+    }).toList();
+
     final result = await llm.generate(
       prompt:
-          "Keep the answer to the point but natural, only answer what is asked in the original prompt using this information: $response, and data: $rawData. Original prompt: $originalPrompt",
+          'Keep the answer to the point but natural, only answer what is asked '
+          'in the original prompt using this data.\n\n'
+          'Tool results: ${json.encode(toolData)}\n\n'
+          'Original prompt: $originalPrompt',
     );
 
     return AgentMessage(
       content: result,
       isFromAgent: true,
       generatedAt: DateTime.now(),
+      data: {'tools': toolData},
     );
   }
 

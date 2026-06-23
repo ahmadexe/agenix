@@ -1,8 +1,7 @@
 import 'tool.dart';
 
-/// Tool Registry for managing tools in the application.
-/// It allows for registering, unregistering, and retrieving tools.
-/// The ToolRegistry is a singleton class that maintains a map of tool names to tool instances.
+/// Tool Registry for managing tools available to a single agent.
+/// Each agent owns its own [ToolRegistry] instance.
 /// It provides methods to register a tool, unregister a tool, get a tool by name, and check if a tool exists.
 class ToolRegistry {
   final Map<String, Tool> _tools = {};
