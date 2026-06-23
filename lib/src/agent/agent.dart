@@ -30,6 +30,12 @@ class Agent {
   /// This is the role of your agent, make it very descriptive because based on the description provided in role agents will be able to communicate with each other.
   final String role;
 
+  /// Controls whether the agent throws typed exceptions or returns a graceful error message.
+  final FailureMode failureMode;
+
+  /// Optional callback invoked when an error occurs, regardless of failure mode.
+  final void Function(AgenixException error, StackTrace stack)? onError;
+
   Agent._internal({
     required this.llm,
     required _MemoryManager memoryManager,
@@ -37,6 +43,8 @@ class Agent {
     required this.toolRegistry,
     required this.name,
     required this.role,
+    required this.failureMode,
+    this.onError,
   }) : _memoryManager = memoryManager,
        _promptBuilder = promptBuilder;
 
@@ -47,6 +55,8 @@ class Agent {
     required String name,
     required String role,
     String pathToSystemData = 'assets/system_data.json',
+    FailureMode failureMode = FailureMode.gracefulMessage,
+    void Function(AgenixException error, StackTrace stack)? onError,
   }) async {
     final systemData = await _loadSystemData(pathToSystemData);
     final registry = ToolRegistry();
@@ -60,6 +70,8 @@ class Agent {
       toolRegistry: registry,
       name: name,
       role: role,
+      failureMode: failureMode,
+      onError: onError,
     );
 
     _AgentRegistry.instance.registerAgent(agent);
@@ -69,9 +81,21 @@ class Agent {
   static Future<Map<String, dynamic>> _loadSystemData(String path) async {
     try {
       final raw = await rootBundle.loadString(path);
-      return json.decode(raw);
-    } catch (e) {
-      throw Exception('Failed to load system data from $path: $e');
+      final decoded = json.decode(raw);
+      if (decoded is! Map<String, dynamic>) {
+        throw ConfigException(
+          'System data at $path must be a JSON object, got ${decoded.runtimeType}',
+        );
+      }
+      return decoded;
+    } on AgenixException {
+      rethrow;
+    } catch (e, st) {
+      throw ConfigException(
+        'Failed to load system data from $path',
+        cause: e,
+        causeStack: st,
+      );
     }
   }
 
@@ -83,17 +107,38 @@ class Agent {
     Object? metaData,
   }) async {
     _memoryManager.saveMessage(convoId, userMessage, metaData: metaData);
-    
-    final response = await _generateResponse(
-      convoId: convoId,
-      userMessage: userMessage,
-      memoryLimit: memoryLimit,
-      metaData: metaData,
-      isPartOfChain: false,
-    );
 
-    await _memoryManager.saveMessage(convoId, response, metaData: metaData);
-    return response;
+    try {
+      final response = await _generateResponse(
+        convoId: convoId,
+        userMessage: userMessage,
+        memoryLimit: memoryLimit,
+        metaData: metaData,
+        isPartOfChain: false,
+      );
+
+      await _memoryManager.saveMessage(convoId, response, metaData: metaData);
+      return response;
+    } on AgenixException catch (e, st) {
+      onError?.call(e, st);
+      if (failureMode == FailureMode.throwError) rethrow;
+      return AgentMessage(
+        content: kLLMResponseOnFailure,
+        isFromAgent: true,
+        generatedAt: DateTime.now(),
+        isError: true,
+      );
+    } catch (e, st) {
+      final wrapped = LlmException('Unexpected error: $e', cause: e, causeStack: st);
+      onError?.call(wrapped, st);
+      if (failureMode == FailureMode.throwError) throw wrapped;
+      return AgentMessage(
+        content: kLLMResponseOnFailure,
+        isFromAgent: true,
+        generatedAt: DateTime.now(),
+        isError: true,
+      );
+    }
   }
 
   Future<AgentMessage> _generateResponse({
@@ -104,109 +149,94 @@ class Agent {
     bool isPartOfChain = false,
     String? input,
   }) async {
-    try {
-      final memoryMessages = await _memoryManager.getContext(
-        convoId,
-        metaData: metaData,
-      );
+    final memoryMessages = await _memoryManager.getContext(
+      convoId,
+      metaData: metaData,
+    );
 
-      final prompt = _promptBuilder.buildTextPrompt(
-        memoryMessages: memoryMessages,
-        userMessage: userMessage,
-        isPartOfChain: isPartOfChain,
-        input: input,
-      );
+    final prompt = _promptBuilder.buildTextPrompt(
+      memoryMessages: memoryMessages,
+      userMessage: userMessage,
+      isPartOfChain: isPartOfChain,
+      input: input,
+    );
 
-      final String rawLLMResponse = await llm.generate(
-        prompt: prompt,
-        rawData: userMessage.imageData,
-      );
+    final String rawLLMResponse = await llm.generate(
+      prompt: prompt,
+      rawData: userMessage.imageData,
+    );
 
-      final parsed = _promptParser.parse(rawLLMResponse);
-      // If the parsed data contains no agents or tools, return the fallback response
-      if (parsed.agentNames.isEmpty && parsed.toolNames.isEmpty) {
-        final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
-        final botResponse = AgentMessage(
-          content: response,
-          isFromAgent: true,
-          generatedAt: DateTime.now(),
-        );
+    final parsed = _promptParser.parse(rawLLMResponse);
 
-        return botResponse;
-      }
-
-      // If a task requires multiple agents to be engaged, we handle that here
-      if (parsed.agentNames.isNotEmpty) {
-        List<String> agentsChain = parsed.agentNames;
-        String? inputForNextStep;
-        AgentMessage? agentResponse;
-        while (agentsChain.isNotEmpty) {
-          final agentName = agentsChain.removeAt(0);
-          final agent = _AgentRegistry.instance.getAgent(agentName);
-
-          if (agent == null) {
-            return AgentMessage(
-              content: kLLMResponseOnFailure,
-              isFromAgent: true,
-              generatedAt: DateTime.now(),
-            );
-          }
-
-          agentResponse = await agent._generateResponse(
-            convoId: convoId,
-            userMessage: userMessage,
-            memoryLimit: memoryLimit,
-            metaData: metaData,
-            isPartOfChain: true,
-            input: inputForNextStep,
-          );
-
-          inputForNextStep =
-              agentResponse.data != null
-                  ? agentResponse.data!.toString()
-                  : agentResponse.content;
-        }
-
-        return agentResponse!;
-      } else {
-        final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
-        final response = toolResponses.map((r) => r.message).join('\n');
-
-        final needsFurtherReasoning = toolResponses.any(
-          (r) => r.needsFurtherReasoning,
-        );
-
-        if (needsFurtherReasoning) {
-          final originalPrompt = userMessage.content;
-          final rawData = toolResponses.map((r) => r.data).join('\n');
-
-          final processedResponse = await _reasonUsingData(
-            originalPrompt,
-            response,
-            rawData,
-          );
-
-          return processedResponse;
-        }
-
-        final botMessage = AgentMessage(
-          content: response.isEmpty ? kLLMResponseOnFailure : response,
-          isFromAgent: true,
-          generatedAt: DateTime.now(),
-          data:
-              toolResponses.isNotEmpty
-                  ? {'tools': toolResponses.map((r) => r.data).toList()}
-                  : null,
-        );
-
-        return botMessage;
-      }
-    } catch (e) {
+    if (parsed.agentNames.isEmpty && parsed.toolNames.isEmpty) {
+      final response = parsed.fallbackResponse ?? kLLMResponseOnFailure;
       return AgentMessage(
-        content: kLLMResponseOnFailure,
+        content: response,
         isFromAgent: true,
         generatedAt: DateTime.now(),
       );
+    }
+
+    if (parsed.agentNames.isNotEmpty) {
+      List<String> agentsChain = parsed.agentNames;
+      String? inputForNextStep;
+      AgentMessage? agentResponse;
+      while (agentsChain.isNotEmpty) {
+        final agentName = agentsChain.removeAt(0);
+        final agent = _AgentRegistry.instance.getAgent(agentName);
+
+        if (agent == null) {
+          throw AgentNotFoundException(agentName);
+        }
+
+        agentResponse = await agent._generateResponse(
+          convoId: convoId,
+          userMessage: userMessage,
+          memoryLimit: memoryLimit,
+          metaData: metaData,
+          isPartOfChain: true,
+          input: inputForNextStep,
+        );
+
+        inputForNextStep =
+            agentResponse.data != null
+                ? agentResponse.data!.toString()
+                : agentResponse.content;
+      }
+
+      return agentResponse!;
+    } else {
+      final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
+      final response = toolResponses.map((r) => r.message).join('\n');
+
+      final needsFurtherReasoning = toolResponses.any(
+        (r) => r.needsFurtherReasoning,
+      );
+
+      if (needsFurtherReasoning) {
+        final originalPrompt = userMessage.content;
+        final rawData = toolResponses.map((r) => r.data).join('\n');
+
+        final processedResponse = await _reasonUsingData(
+          originalPrompt,
+          response,
+          rawData,
+        );
+
+        return processedResponse;
+      }
+
+      final botMessage = AgentMessage(
+        content: response.isEmpty ? kLLMResponseOnFailure : response,
+        isFromAgent: true,
+        generatedAt: DateTime.now(),
+        data:
+            toolResponses.isNotEmpty
+                ? {'tools': toolResponses.map((r) => r.data).toList()}
+                : null,
+      );
+
+      return botMessage;
     }
   }
 

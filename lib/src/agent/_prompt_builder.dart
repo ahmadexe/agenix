@@ -32,6 +32,7 @@ class _PromptBuilder {
     if (memoryMessages != null && memoryMessages.isNotEmpty) {
       buffer.writeln("Chat History: ");
       for (final msg in memoryMessages) {
+        if (msg.isError) continue;
         buffer.writeln(
           "${msg.isFromAgent ? 'Chatbot' : 'User'}: ${msg.content}",
         );

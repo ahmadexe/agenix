@@ -26,6 +26,10 @@ class AgentMessage {
   /// Optional data associated with the message, this data is for internal use of the application and not for any extrnal use.
   final Map<String, dynamic>? data;
 
+  /// When true, this message represents an error and should be excluded from
+  /// conversation history sent to the LLM.
+  final bool isError;
+
   /// Constructs an AgentMessage with required content and generatedAt,
   AgentMessage({
     required this.content,
@@ -34,6 +38,7 @@ class AgentMessage {
     this.imageData,
     this.imageUrl,
     this.data,
+    this.isError = false,
   });
 
   /// Creates a copy of the current message with optional new values for each field
@@ -44,6 +49,7 @@ class AgentMessage {
     Uint8List? imageData,
     String? imageUrl,
     Map<String, dynamic>? data,
+    bool? isError,
   }) {
     return AgentMessage(
       content: content ?? this.content,
@@ -52,6 +58,7 @@ class AgentMessage {
       imageData: imageData ?? this.imageData,
       imageUrl: imageUrl ?? this.imageUrl,
       data: data ?? this.data,
+      isError: isError ?? this.isError,
     );
   }
 
@@ -63,6 +70,7 @@ class AgentMessage {
       'isFromAgent': isFromAgent,
       'imageUrl': imageUrl,
       'data': data,
+      'isError': isError,
     };
   }
 
@@ -76,6 +84,7 @@ class AgentMessage {
       isFromAgent: map['isFromAgent'] as bool,
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
       data: map['data'] as Map<String, dynamic>?,
+      isError: map['isError'] as bool? ?? false,
     );
   }
 
@@ -88,7 +97,7 @@ class AgentMessage {
 
   @override
   String toString() {
-    return 'AgentMessage(content: $content, generatedAt: $generatedAt, isFromAgent: $isFromAgent, imageData: $imageData, imageUrl: $imageUrl, data: $data)';
+    return 'AgentMessage(content: $content, generatedAt: $generatedAt, isFromAgent: $isFromAgent, imageData: $imageData, imageUrl: $imageUrl, data: $data, isError: $isError)';
   }
 
   /// Equality check based on all fields
@@ -101,7 +110,8 @@ class AgentMessage {
         other.isFromAgent == isFromAgent &&
         other.imageData == imageData &&
         other.imageUrl == imageUrl &&
-        other.data == data;
+        other.data == data &&
+        other.isError == isError;
   }
 
   /// Hash code based on all fields
@@ -112,6 +122,7 @@ class AgentMessage {
         isFromAgent.hashCode ^
         imageData.hashCode ^
         imageUrl.hashCode ^
-        data.hashCode;
+        data.hashCode ^
+        isError.hashCode;
   }
 }

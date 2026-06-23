@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:agenix/src/static/agenix_exceptions.dart';
+
 /// The parser is responsible for interpreting the output from the LLM.
 /// The output is in JSON format and can contain either a response or a list of tools to be executed.
 /// The parser will extract the tool names and parameters from the JSON output.
@@ -79,7 +81,10 @@ class PromptParser {
         agentNames: [],
       );
     } else {
-      throw Exception("Unrecognized format");
+      throw ResponseParseException(
+        'Unrecognized response format from LLM',
+        rawOutput: llmOutputJson,
+      );
     }
   }
 
@@ -91,8 +96,13 @@ class PromptParser {
       data = data.replaceFirst(RegExp(r'```json'), '');
       data = data.replaceFirst(RegExp(r'```'), '');
       return json.decode(data);
-    } catch (e) {
-      throw Exception("Invalid JSON output from LLM: $e");
+    } catch (e, st) {
+      throw ResponseParseException(
+        'Invalid JSON output from LLM',
+        rawOutput: data,
+        cause: e,
+        causeStack: st,
+      );
     }
   }
 }

@@ -16,14 +16,21 @@ class ToolRunner {
     for (final toolName in result.toolNames) {
       final tool = registry.getTool(toolName);
       if (tool == null) {
-        throw Exception("Tool $toolName not found in registry");
-      }
-      if (result.params[toolName] == null) {
-        throw Exception("No parameters provided for tool $toolName");
+        throw ToolNotFoundException(toolName);
       }
       final toolParams = result.params[toolName] ?? {};
-      final output = await tool.run(toolParams);
-      responses.add(output);
+      try {
+        final output = await tool.run(toolParams);
+        responses.add(output);
+      } catch (e, st) {
+        if (e is AgenixException) rethrow;
+        throw ToolExecutionException(
+          toolName,
+          'Tool $toolName threw during execution: $e',
+          cause: e,
+          causeStack: st,
+        );
+      }
     }
 
     return responses;
