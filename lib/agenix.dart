@@ -2,6 +2,7 @@
 
 // Core Agent
 export 'src/agent/agent.dart';
+export 'src/agent/agent_scope.dart';
 
 // LLM
 export 'src/llm/llm.dart';

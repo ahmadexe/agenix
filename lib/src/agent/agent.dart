@@ -36,6 +36,8 @@ class Agent {
   /// Optional callback invoked when an error occurs, regardless of failure mode.
   final void Function(AgenixException error, StackTrace stack)? onError;
 
+  final AgentScope _scope;
+
   Agent._internal({
     required this.llm,
     required _MemoryManager memoryManager,
@@ -44,11 +46,20 @@ class Agent {
     required this.name,
     required this.role,
     required this.failureMode,
+    required AgentScope scope,
     this.onError,
   }) : _memoryManager = memoryManager,
-       _promptBuilder = promptBuilder;
+       _promptBuilder = promptBuilder,
+       _scope = scope;
 
   /// Async factory constructor to create an instance with loaded system data.
+  ///
+  /// [scope] controls which group of agents this agent can discover and chain
+  /// to. Defaults to [AgentScope.global].
+  ///
+  /// [registrationPolicy] controls what happens when an agent with the same
+  /// [name] already exists in the scope. Defaults to
+  /// [RegistrationPolicy.throwIfExists].
   static Future<Agent> create({
     required DataStore dataStore,
     required LLM llm,
@@ -57,7 +68,10 @@ class Agent {
     String pathToSystemData = 'assets/system_data.json',
     FailureMode failureMode = FailureMode.gracefulMessage,
     void Function(AgenixException error, StackTrace stack)? onError,
+    AgentScope? scope,
+    RegistrationPolicy registrationPolicy = RegistrationPolicy.throwIfExists,
   }) async {
+    final resolvedScope = scope ?? AgentScope.global;
     final systemData = await _loadSystemData(pathToSystemData);
     final registry = ToolRegistry();
     final agent = Agent._internal(
@@ -66,16 +80,23 @@ class Agent {
       promptBuilder: _PromptBuilder(
         systemPrompt: systemData,
         registry: registry,
+        scope: resolvedScope,
       ),
       toolRegistry: registry,
       name: name,
       role: role,
       failureMode: failureMode,
       onError: onError,
+      scope: resolvedScope,
     );
 
-    _AgentRegistry.instance.registerAgent(agent);
+    _AgentRegistry.instance.registerAgent(agent, policy: registrationPolicy);
     return agent;
+  }
+
+  /// Unregisters this agent from its scope, releasing it for re-creation.
+  void dispose() {
+    _AgentRegistry.instance.unregisterAgent(this);
   }
 
   static Future<Map<String, dynamic>> _loadSystemData(String path) async {
@@ -185,7 +206,7 @@ class Agent {
       AgentMessage? agentResponse;
       while (agentsChain.isNotEmpty) {
         final agentName = agentsChain.removeAt(0);
-        final agent = _AgentRegistry.instance.getAgent(agentName);
+        final agent = _AgentRegistry.instance.getAgent(agentName, scope: _scope);
 
         if (agent == null) {
           throw AgentNotFoundException(agentName);

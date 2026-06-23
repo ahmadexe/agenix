@@ -8,8 +8,13 @@ part of 'agent.dart';
 class _PromptBuilder {
   final Map<String, dynamic> systemPrompt;
   final ToolRegistry registry;
+  final AgentScope scope;
 
-  _PromptBuilder({required this.systemPrompt, required this.registry});
+  _PromptBuilder({
+    required this.systemPrompt,
+    required this.registry,
+    required this.scope,
+  });
 
   String buildTextPrompt({
     List<AgentMessage>? memoryMessages,
@@ -25,7 +30,7 @@ class _PromptBuilder {
 
     if (!isPartOfChain) {
       buffer.writeln(
-        "Agents in the System: ${_AgentRegistry.instance.getAllAgents().map((e) => e.toString()).join(", ")}",
+        "Agents in the System: ${_AgentRegistry.instance.getAllAgents(scope: scope).map((e) => e.toString()).join(", ")}",
       );
     }
 
