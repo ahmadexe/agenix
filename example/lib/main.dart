@@ -1,7 +1,7 @@
 import 'package:agenix/agenix.dart';
 import 'package:basic_app/firebase_options.dart';
 import 'package:basic_app/services/firebase_service.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
