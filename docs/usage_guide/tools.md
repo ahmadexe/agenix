@@ -367,7 +367,7 @@ You don't need to do anything special to enable this. Just register your tools a
 
 5. **Handle errors gracefully.** Always catch exceptions in `run()` and return a failure `ToolResponse` rather than letting exceptions bubble up.
 
-6. **Keep tools focused.** One tool = one capability. Don't build a "do everything" tool. Multiple small tools give the LLM more flexibility.
+6. **Keep tools focused.** One tool = one capability. Don't build a "do everything" tool. Multiple small tools give the LLM more flexibility. These tools can rup upto a depth of 5. 
 
 ## Next Steps
 
