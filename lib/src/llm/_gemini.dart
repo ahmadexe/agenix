@@ -8,12 +8,14 @@ import 'package:agenix/src/static/agenix_exceptions.dart';
 import 'package:agenix/src/llm/llm.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
+/// Gemini LLM implementation backed by the Google Generative AI SDK.
 class Gemini extends LLM {
   final String _modelName;
   final String _apiKey;
   final LlmConfig _config;
   final List<SafetySetting>? _safety;
 
+  /// Creates a Gemini instance with the given API key, model name, and optional config.
   Gemini({
     required String apiKey,
     required String modelName,

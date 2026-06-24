@@ -6,10 +6,13 @@ class LlmConfig {
   /// Hard cap on output tokens (cost/latency control).
   final int? maxOutputTokens;
 
+  /// Nucleus sampling threshold.
   final double? topP;
 
+  /// Top-K sampling limit.
   final int? topK;
 
+  /// Sequences that cause the model to stop generating.
   final List<String>? stopSequences;
 
   /// Request the provider's native JSON output mode where supported.
@@ -18,6 +21,7 @@ class LlmConfig {
   /// Per-request wall-clock timeout.
   final Duration timeout;
 
+  /// Creates an [LlmConfig] with sensible defaults for structured JSON output.
   const LlmConfig({
     this.temperature = 0.2,
     this.maxOutputTokens,
@@ -28,6 +32,7 @@ class LlmConfig {
     this.timeout = const Duration(seconds: 60),
   });
 
+  /// Returns a copy with the given fields replaced.
   LlmConfig copyWith({
     double? temperature,
     int? maxOutputTokens,

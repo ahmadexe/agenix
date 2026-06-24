@@ -19,6 +19,7 @@ abstract class LLM {
   /// Provider-neutral generation config.
   LlmConfig get config;
 
+  /// Creates a Gemini-backed [LLM] instance.
   static LLM geminiLLM({
     required String apiKey,
     required String modelName,
