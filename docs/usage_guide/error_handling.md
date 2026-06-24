@@ -22,7 +22,7 @@ final agent = await Agent.create(
   llm: llm,
   name: 'assistant',
   role: 'A helpful assistant.',
-  failureMode: FailureMode.throwException,
+  failureMode: FailureMode.throwError,
 );
 ```
 
@@ -45,7 +45,7 @@ if (response.isError) {
 }
 ```
 
-### `FailureMode.throwException`
+### `FailureMode.throwError`
 
 Exceptions propagate to your code. Use this when you want full control over error handling:
 
@@ -184,7 +184,7 @@ class ResilientService {
       ),
       name: 'primary',
       role: 'A helpful assistant.',
-      failureMode: FailureMode.throwException,
+      failureMode: FailureMode.throwError,
       scope: scope,
     );
 
