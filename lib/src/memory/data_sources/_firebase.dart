@@ -14,6 +14,21 @@ import 'package:uuid/uuid.dart';
 /// FirebaseDataStore is an implementation of DataStore that uses Firebase Firestore and Firebase Storage to store and retrieve data.
 /// This allows for easy swapping of data stores without changing the core logic of the agent's memory management.
 /// To use this data store, you need to initialize Firebase in your app and provide the necessary configuration.
+String _extensionForMimeType(String mimeType) {
+  return switch (mimeType) {
+    'image/png' => '.png',
+    'image/gif' => '.gif',
+    'image/webp' => '.webp',
+    'image/svg+xml' => '.svg',
+    _ => '.jpg',
+  };
+}
+
+/// Creates a [FirebaseDataStore].
+///
+  /// Accepts optional Firebase instances for dependency injection (e.g.
+  /// using `fake_cloud_firestore` / `firebase_auth_mocks` in tests).
+  /// Defaults to the standard singleton instances.
 class FirebaseDataStore extends DataStore {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -52,16 +67,21 @@ class FirebaseDataStore extends DataStore {
           .doc(conversationId);
 
       final messagesRef = ref.collection('messages');
-      final messages = await messagesRef.get();
 
-      final batch = _firestore.batch();
-      for (final message in messages.docs) {
-        batch.delete(message.reference);
-      }
+      // Firestore batches are limited to 500 writes — paginate the delete.
+      const batchLimit = 499; // reserve 1 for the conversation doc itself
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+      do {
+        snapshot = await messagesRef.limit(batchLimit).get();
+        if (snapshot.docs.isEmpty) break;
+        final batch = _firestore.batch();
+        for (final doc in snapshot.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+      } while (snapshot.docs.length == batchLimit);
 
-      batch.delete(ref);
-
-      await batch.commit();
+      await ref.delete();
     } on AgenixException {
       rethrow;
     } catch (e, st) {
@@ -166,8 +186,12 @@ class FirebaseDataStore extends DataStore {
       if (msg.imageData != null) {
         final storageRef = _storage.ref();
         final id = const Uuid().v4();
-        final imageRef = storageRef.child('messages/$id.jpg');
-        await imageRef.putData(msg.imageData!);
+        final ext = _extensionForMimeType(msg.mimeType);
+        final imageRef = storageRef.child('messages/$id$ext');
+        await imageRef.putData(
+          msg.imageData!,
+          SettableMetadata(contentType: msg.mimeType),
+        );
         final url = await imageRef.getDownloadURL();
         payload['imageUrl'] = url.toString();
       }

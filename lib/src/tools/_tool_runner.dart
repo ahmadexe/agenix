@@ -1,7 +1,6 @@
 import 'package:agenix/agenix.dart';
 import 'package:agenix/src/tools/_param_validator.dart';
 import 'package:agenix/src/tools/_parser.dart';
-import 'package:agenix/src/tools/tool_registry.dart';
 
 /// Runs tools based on the parsed LLM output, validating parameters first.
 class ToolRunner {

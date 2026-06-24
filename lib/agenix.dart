@@ -17,6 +17,7 @@ export 'src/memory/data/data_store.dart';
 export 'src/tools/tool.dart';
 export 'src/tools/param_spec.dart';
 export 'src/tools/tool_response.dart';
+export 'src/tools/tool_registry.dart';
 
 // Exceptions & Config
 export 'src/static/agenix_exceptions.dart';
