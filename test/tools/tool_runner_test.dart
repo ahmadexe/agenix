@@ -1,5 +1,4 @@
 import 'package:agenix/agenix.dart';
-import 'package:agenix/src/tools/tool_registry.dart';
 import 'package:agenix/src/tools/_tool_runner.dart';
 import 'package:agenix/src/tools/_parser.dart';
 import 'package:flutter_test/flutter_test.dart';

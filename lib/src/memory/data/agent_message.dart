@@ -21,6 +21,9 @@ class AgentMessage {
   /// Optional binary image data (e.g., for displaying inline)
   final Uint8List? imageData;
 
+  /// MIME type of [imageData] (e.g. 'image/png', 'image/jpeg').
+  final String mimeType;
+
   /// Optional URL to an image
   final String? imageUrl;
 
@@ -37,6 +40,7 @@ class AgentMessage {
     required this.generatedAt,
     required this.isFromAgent,
     this.imageData,
+    this.mimeType = 'image/jpeg',
     this.imageUrl,
     this.data,
     this.isError = false,
@@ -48,6 +52,7 @@ class AgentMessage {
     DateTime? generatedAt,
     bool? isFromAgent,
     Uint8List? imageData,
+    String? mimeType,
     String? imageUrl,
     Map<String, dynamic>? data,
     bool? isError,
@@ -57,6 +62,7 @@ class AgentMessage {
       generatedAt: generatedAt ?? this.generatedAt,
       isFromAgent: isFromAgent ?? this.isFromAgent,
       imageData: imageData ?? this.imageData,
+      mimeType: mimeType ?? this.mimeType,
       imageUrl: imageUrl ?? this.imageUrl,
       data: data ?? this.data,
       isError: isError ?? this.isError,
@@ -69,6 +75,7 @@ class AgentMessage {
       'content': content,
       'generatedAt': generatedAt.millisecondsSinceEpoch,
       'isFromAgent': isFromAgent,
+      'mimeType': mimeType,
       'imageUrl': imageUrl,
       'data': data,
       'isError': isError,
@@ -83,6 +90,7 @@ class AgentMessage {
         map['generatedAt'] as int,
       ),
       isFromAgent: map['isFromAgent'] as bool,
+      mimeType: map['mimeType'] as String? ?? 'image/jpeg',
       imageUrl: map['imageUrl'] != null ? map['imageUrl'] as String : null,
       data: map['data'] as Map<String, dynamic>?,
       isError: map['isError'] as bool? ?? false,
@@ -98,7 +106,7 @@ class AgentMessage {
 
   @override
   String toString() {
-    return 'AgentMessage(content: $content, generatedAt: $generatedAt, isFromAgent: $isFromAgent, imageData: $imageData, imageUrl: $imageUrl, data: $data, isError: $isError)';
+    return 'AgentMessage(content: $content, generatedAt: $generatedAt, isFromAgent: $isFromAgent, imageData: $imageData, mimeType: $mimeType, imageUrl: $imageUrl, data: $data, isError: $isError)';
   }
 
   /// Equality check based on all fields
@@ -110,6 +118,7 @@ class AgentMessage {
         other.generatedAt == generatedAt &&
         other.isFromAgent == isFromAgent &&
         listEquals(other.imageData, imageData) &&
+        other.mimeType == mimeType &&
         other.imageUrl == imageUrl &&
         mapEquals(other.data, data) &&
         other.isError == isError;
@@ -117,13 +126,14 @@ class AgentMessage {
 
   /// Hash code based on all fields
   @override
-  int get hashCode {
-    return content.hashCode ^
-        generatedAt.hashCode ^
-        isFromAgent.hashCode ^
-        (imageData != null ? Object.hashAll(imageData!) : 0) ^
-        imageUrl.hashCode ^
-        (data != null ? Object.hashAll(data!.entries) : 0) ^
-        isError.hashCode;
-  }
+  int get hashCode => Object.hash(
+    content,
+    generatedAt,
+    isFromAgent,
+    imageData != null ? Object.hashAll(imageData!) : null,
+    mimeType,
+    imageUrl,
+    data != null ? Object.hashAll(data!.entries) : null,
+    isError,
+  );
 }

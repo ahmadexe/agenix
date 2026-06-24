@@ -78,6 +78,5 @@ class Conversation {
 
   /// Generates a hash code based on the object's fields.
   @override
-  int get hashCode =>
-      lastMessage.hashCode ^ lastMessageTime.hashCode ^ conversationId.hashCode;
+  int get hashCode => Object.hash(lastMessage, lastMessageTime, conversationId);
 }

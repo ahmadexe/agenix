@@ -3,7 +3,6 @@ import 'package:agenix/agenix.dart';
 import 'package:agenix/src/static/_pkg_constants.dart';
 import 'package:agenix/src/tools/_parser.dart';
 import 'package:agenix/src/tools/_tool_runner.dart';
-import 'package:agenix/src/tools/tool_registry.dart';
 import 'package:flutter/services.dart';
 
 part '_memory_manager.dart';
@@ -425,7 +424,7 @@ class Agent {
             )
             .toList();
 
-    final result = await llm.generate(
+    final raw = await llm.generate(
       prompt:
           'Keep the answer to the point but natural, only answer what is asked '
           'in the original prompt using this data.\n\n'
@@ -434,12 +433,26 @@ class Agent {
       systemInstruction: _promptBuilder.systemInstruction,
     );
 
+    final content = _extractResponseText(raw);
+
     return AgentMessage(
-      content: result,
+      content: content,
       isFromAgent: true,
       generatedAt: DateTime.now(),
       data: {'tools': toolData},
     );
+  }
+
+  /// Extracts plain text from a raw LLM response that may be wrapped in
+  /// `{"response": "..."}` JSON (common when jsonMode is enabled).
+  String _extractResponseText(String raw) {
+    try {
+      final decoded = json.decode(raw.trim());
+      if (decoded is Map<String, dynamic> && decoded.containsKey('response')) {
+        return decoded['response']?.toString() ?? raw;
+      }
+    } catch (_) {}
+    return raw;
   }
 
   @override
