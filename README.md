@@ -1,192 +1,681 @@
-![Screenshot 2025-05-28 at 4 49 43 PM](https://github.com/user-attachments/assets/fbb110c9-6019-440b-b6c4-37d86dea725f)
-
+![Agenix Banner](https://github.com/user-attachments/assets/fbb110c9-6019-440b-b6c4-37d86dea725f)
 
 # Agenix
 
-
 <p align="center">
-<a href="https://github.com/ahmadexe/agenix"><img src="https://img.shields.io/github/stars/ahmadexe/agenix.svg?style=flat&logo=github&colorB=deeppink&label=stars" alt="Star on Github"></a>
-<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
-<a href="https://pub.dev/packages/agenix"><img src="https://img.shields.io/pub/v/agenix.svg" alt="Pub Dev"></a>
-<a href="https://pub.dev/packages/agenix"><img src="https://img.shields.io/badge/platform-Flutter%20%7C%20Dart-blue" alt="Platform"></a>
+  <a href="https://github.com/ahmadexe/agenix/actions/workflows/ci.yml"><img src="https://github.com/ahmadexe/agenix/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://pub.dev/packages/agenix"><img src="https://img.shields.io/pub/v/agenix.svg" alt="Pub"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
+  <a href="https://github.com/ahmadexe/agenix"><img src="https://img.shields.io/github/stars/ahmadexe/agenix.svg?style=flat&logo=github&colorB=deeppink&label=stars" alt="Stars"></a>
+  <a href="https://pub.dev/packages/agenix"><img src="https://img.shields.io/badge/platform-Flutter%20%7C%20Dart-blue" alt="Platform"></a>
 </p>
 
----
-
-A framework to build agentic apps using Flutter & Dart!
+A Flutter package for building AI agents with memory, tools, and multi-agent orchestration. Define your agent's personality, give it tools, and let it handle conversations — including delegating sub-tasks across a chain of specialized agents.
 
 ---
 
+## Table of Contents
 
-## Overview
-Agenix aims at providing an easy interface to build Agentic apps using Flutter and Dart. It comes with various Datastores to store your messages, various LLMs to act as the base of your agentic app. Just define the background data of your Agentic app, your tools and you are good to go!
+- [Architecture Overview](#architecture-overview)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+  - [Agent](#agent)
+  - [LLM](#llm)
+  - [DataStore (Memory)](#datastore-memory)
+  - [Tools](#tools)
+  - [Multi-Agent Orchestration](#multi-agent-orchestration)
+  - [Agent Scopes](#agent-scopes)
+- [Error Handling](#error-handling)
+- [API Reference](#api-reference)
+- [Usage Architectures](#usage-architectures)
+- [Examples](#examples)
+- [Maintainers](#maintainers)
 
+---
 
-## Components
-Agenix allows users to build agentic apps, there are some key components that users should be familiar with before using Agenix.
-1. Agent: Agent is the main component you will be dealing with in your flutter and dart code. It exposes you to the public facing API that allows users to generate response from the LLM. 
-2. DataStore: This is how Agenix deals with the data, whether it is to save the data, get an ongoing conversation or to fetch all conversations with the agent. You can use a pre-built datastore like FirebaseDataStore, or you can create a custom implementation. 
-3. LLM: A large language model to support the agent. You can use a pre-built model like Gemini or if you have a custom implementation running on the server, you can use that.
-4. Tools: Tools are elements that do the work for the agent, if you want the agent to fetch news? Make and register a tool to fetch news from the internet.
-5. Tool Registry: Whatever tool you have, don't forget to add them to the registry!
+## Architecture Overview
 
-
-## How to Use?
-
-### Initialization
-An agentic app runs using an AI Agent, your AI agent should have some background knowledge about your application and what job is it performing. To provide this knowledge add a file called **system_data.json**, in this file define the name of the agent, it's role in the app, it's personality and anything else you want to add. You can basically customize this file as per your wish.
-Location of the file
-
-
-**assets/system_data.json**
-
-
-In the main function or in your bloc or the point of contact to your agent, add the following lines to initialize the Agent. This current example initializes the agent using firebase firestore as DataStore and Gemini as the LLM. You can swap them for your own implementations. You can create as many agents as you want, agenix will keep track of them, internally agenix will delegate tasks to the most appropriate agent. Agenix can also engage multiple agents in a chain to perform a sequence of sub tasks.
 ```
+┌─────────────────────────────────────────────────────────────┐
+│                        Your Flutter App                     │
+│                                                             │
+│   Agent.create(llm, dataStore, name, role)                  │
+│       │                                                     │
+│       ▼                                                     │
+│   ┌─────────┐    generateResponse()    ┌───────────────┐    │
+│   │  Agent   │ ◄─────────────────────► │   LLM         │    │
+│   │         │                          │  (Gemini /     │    │
+│   │         │                          │   Custom)      │    │
+│   └────┬────┘                          └───────────────┘    │
+│        │                                                     │
+│   ┌────┴──────────────────────────┐                         │
+│   │           │                   │                         │
+│   ▼           ▼                   ▼                         │
+│ ┌──────┐  ┌──────────┐  ┌────────────────┐                 │
+│ │Tools │  │DataStore  │  │Agent Registry  │                 │
+│ │      │  │(Firebase/ │  │(Multi-Agent    │                 │
+│ │      │  │ InMemory/ │  │ Orchestration) │                 │
+│ │      │  │ Custom)   │  │               │                  │
+│ └──────┘  └──────────┘  └────────────────┘                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+The agent receives a user message, builds a structured prompt (including conversation history from the DataStore and available tools from the ToolRegistry), sends it to the LLM, and parses the response into one of three actions:
+
+1. **Direct response** — returns text to the user
+2. **Tool invocation** — runs one or more tools, optionally iterating up to 5 times before producing a final answer
+3. **Agent delegation** — hands the task to a chain of other agents, each passing its output to the next
+
+---
+
+## Installation
+
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  agenix: ^4.0.0
+```
+
+Then run:
+
+```bash
+flutter pub get
+```
+
+---
+
+## Quick Start
+
+### 1. Create system data
+
+Create `assets/system_data.json` with your agent's personality and background knowledge:
+
+```json
+{
+  "name": "Lens",
+  "role": "A helpful assistant for the Acme platform",
+  "personality": "Friendly, concise, and knowledgeable",
+  "instructions": "Always greet the user by name when possible"
+}
+```
+
+Add the asset to your `pubspec.yaml`:
+
+```yaml
+flutter:
+  assets:
+    - assets/system_data.json
+```
+
+### 2. Initialize the agent
+
+```dart
+import 'package:agenix/agenix.dart';
+
 final agent = await Agent.create(
-      dataStore: DataStore.firestoreDataStore(),
-      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
-      name: 'General Purpose Agent',
-      role: 'This is the main agent for the platform.',
-    );
-```
-
-Define your key and run:
-```
-flutter run -d chrome --dart-define=GEMINI_API_KEY=Your-Gemini-Key
-```
-
-
-### Generating Response
-To get a response from the Agent, call the agent.generateResponse method.
-```
-final res = await agent.generateResponse(
-    convoId: '1',
-    userMessage: userMessage,
+  dataStore: DataStore.inMemory(),        // or DataStore.firestoreDataStore()
+  llm: LLM.geminiLLM(
+    apiKey: 'YOUR_API_KEY',
+    modelName: 'gemini-2.0-flash',
+  ),
+  name: 'Assistant',
+  role: 'General purpose assistant for the platform.',
 );
 ```
 
+### 3. Generate a response
 
-### Building a tool
-The Agent will be capable enough to maintain context using previous messages in a conversation, understand and intelligently respond to user's prompt, but to perform any specific action, like hit an API endpoint, or run a database query, you will need to build and register tools.
+```dart
+final response = await agent.generateResponse(
+  convoId: 'conversation-1',
+  userMessage: AgentMessage(
+    content: 'What is the weather like today?',
+    isFromAgent: false,
+    generatedAt: DateTime.now(),
+  ),
+);
 
-There are 2 kinds of tools.
-1. Tools without parameters.
-2. Tools with parameters.
-
-You can build them something like this. 
+print(response.content);
 ```
+
+### 4. Run the app
+
+```bash
+flutter run -d chrome --dart-define=GEMINI_API_KEY=your-key-here
+```
+
+---
+
+## Core Concepts
+
+### Agent
+
+The `Agent` is the central class. It wires together an LLM, a DataStore, a ToolRegistry, and an AgentScope.
+
+```dart
+final agent = await Agent.create(
+  dataStore: DataStore.firestoreDataStore(),
+  llm: LLM.geminiLLM(apiKey: key, modelName: 'gemini-2.0-flash'),
+  name: 'Support Agent',
+  role: 'Handles customer support queries for the e-commerce platform.',
+  failureMode: FailureMode.throwError,  // or FailureMode.gracefulMessage (default)
+  onError: (error, stack) => logger.severe('Agent error', error, stack),
+  scope: AgentScope.global,             // default — or create isolated scopes
+  registrationPolicy: RegistrationPolicy.throwIfExists,  // default
+);
+```
+
+**Key methods:**
+
+| Method | Description |
+|---|---|
+| `generateResponse(convoId, userMessage)` | Send a user message and get back an `AgentMessage` from the agent |
+| `getMessages(conversationId)` | Retrieve all messages in a conversation |
+| `getAllConversations()` | List all conversations for the current user |
+| `deleteConversation(conversationId)` | Delete a conversation and its messages |
+| `dispose()` | Unregister the agent from its scope |
+
+**Parameters for `generateResponse`:**
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `convoId` | `String` | required | Conversation identifier |
+| `userMessage` | `AgentMessage` | required | The user's message |
+| `memoryLimit` | `int` | `10` | Max previous messages loaded as context |
+| `metaData` | `Object?` | `null` | Opaque pass-through for auth tokens, tenant IDs, etc. |
+
+---
+
+### LLM
+
+The `LLM` abstract class defines the contract for language model providers. Agenix ships with Gemini; implement the interface for other providers.
+
+```dart
+// Built-in Gemini
+final llm = LLM.geminiLLM(
+  apiKey: 'YOUR_API_KEY',
+  modelName: 'gemini-2.0-flash',
+  config: LlmConfig(
+    temperature: 0.2,       // Low for structured JSON output
+    maxOutputTokens: 2048,
+    topP: 0.95,
+    topK: 40,
+    jsonMode: true,         // Request native JSON output mode
+    timeout: Duration(seconds: 60),
+  ),
+);
+```
+
+**Implementing a custom LLM:**
+
+```dart
+class MyCustomLLM implements LLM {
+  @override
+  final String modelId = 'my-model-v1';
+
+  @override
+  final LlmConfig config;
+
+  MyCustomLLM({this.config = const LlmConfig()});
+
+  @override
+  Future<String> generate({
+    required String prompt,
+    String? systemInstruction,
+    Uint8List? rawData,
+    String mimeType = 'image/png',
+  }) async {
+    // Call your model API here
+    // Must return a JSON string matching one of:
+    //   {"response": "..."}
+    //   {"tools": "tool1, tool2", "parameters": {...}}
+    //   {"agents_chain": ["agent1", "agent2"]}
+  }
+}
+```
+
+---
+
+### DataStore (Memory)
+
+The `DataStore` abstract class handles conversation persistence. Messages are saved after each `generateResponse` call, and loaded as context for future prompts.
+
+**Built-in implementations:**
+
+| DataStore | Use Case |
+|---|---|
+| `DataStore.firestoreDataStore()` | Production apps with Firebase backend |
+| `DataStore.inMemory()` | Testing, prototyping, or non-persistent apps |
+
+**Firebase setup:** Ensure `Firebase.initializeApp()` is called before creating the data store. Requires an authenticated user via `firebase_auth`.
+
+**Implementing a custom DataStore:**
+
+```dart
+class PostgresDataStore extends DataStore {
+  @override
+  Future<void> saveMessage(String convoId, AgentMessage msg, {Object? metaData}) async {
+    // INSERT INTO messages ...
+  }
+
+  @override
+  Future<List<AgentMessage>> getMessages(String conversationId, {int? limit, Object? metaData}) async {
+    // SELECT * FROM messages WHERE convo_id = ? ORDER BY generated_at LIMIT ?
+  }
+
+  @override
+  Future<void> deleteConversation(String conversationId, {Object? metaData}) async {
+    // DELETE FROM messages WHERE convo_id = ?
+  }
+
+  @override
+  Future<List<Conversation>> getConversations({Object? metaData}) async {
+    // SELECT DISTINCT convo_id, last_message, last_message_time FROM ...
+  }
+}
+```
+
+---
+
+### Tools
+
+Tools let the agent perform actions beyond conversation — API calls, database queries, calculations, anything.
+
+**Lifecycle:**
+
+```
+User Message → LLM decides tool is needed → Agent runs tool → Tool returns ToolResponse
+    → Agent either returns result OR iterates (up to 5 rounds of tool calls)
+```
+
+#### Tool without parameters
+
+```dart
 class NewsTool extends Tool {
-  NewsTool({required super.name, required super.description});
+  NewsTool() : super(
+    name: 'news_tool',
+    description: 'Fetches the latest news headlines.',
+  );
 
   @override
   Future<ToolResponse> run(Map<String, dynamic> params) async {
-    // Simulate a network call
-    await Future.delayed(const Duration(seconds: 2));
-    final apiResponse = {
-      'headline': 'Flutter is Awesome!',
-      'details':
-          'Flutter 3.0 has been released with amazing features. The latest flutter version is 3.32, check it out!',
-    };
+    final headlines = await NewsApi.fetchHeadlines();
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
-      message:
-          'Breaking News: ${apiResponse['headline']}. \n${apiResponse['details']}',
-      data:
-          apiResponse, // The data field is optional you can return data if it is required.
-      needsFurtherReasoning:
-          true, // Set this to true if the tool needs further reasoning
+      message: 'Here are today\'s headlines: ${headlines.join(", ")}',
+      needsFurtherReasoning: true,  // Agent will synthesize a natural-language answer
     );
   }
 }
 ```
 
-The above tool uses no params, but to use a tool with params. Do something like this.
-```
+#### Tool with parameters
+
+```dart
 class WeatherTool extends Tool {
-  WeatherTool({
-    required super.name,
-    required super.description,
-    required super.parameters,
-  });
+  WeatherTool() : super(
+    name: 'weather_tool',
+    description: 'Gets current weather for a given location.',
+    parameters: [
+      ParameterSpecification(
+        name: 'location',
+        type: 'string',
+        description: 'City name or coordinates.',
+        required: true,
+      ),
+      ParameterSpecification(
+        name: 'units',
+        type: 'string',
+        description: 'Temperature unit.',
+        required: false,
+        defaultValue: 'celsius',
+        enumValues: ['celsius', 'fahrenheit'],
+      ),
+    ],
+  );
 
   @override
   Future<ToolResponse> run(Map<String, dynamic> params) async {
-    // Simulate a network call
-    await Future.delayed(const Duration(seconds: 2));
-    final apiResponse = {'temperature': 25, 'condition': 'Sunny'};
-    final location = params['location'] as String?;
-
+    final location = params['location'] as String;
+    final units = params['units'] as String? ?? 'celsius';
+    final weather = await WeatherApi.get(location, units: units);
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
-      message:
-          'The weather in $location is ${apiResponse['condition']} with a temperature of ${apiResponse['temperature']}°C.',
+      message: 'Weather in $location: ${weather.temp}° ${weather.condition}',
+      data: weather.toMap(),  // Optional structured data for chaining
     );
   }
 }
 ```
 
-Once you have defined yout tools, register them as follows:
+#### Registering tools
+
+```dart
+agent.toolRegistry.registerTool(NewsTool());
+agent.toolRegistry.registerTool(WeatherTool());
+
+// Dynamically remove a tool
+agent.toolRegistry.unregisterTool('weather_tool');
 ```
-ToolRegistry().registerTool(
-      NewsTool(
-        name: 'news_tool',
-        description:
-            'This tool should be used if the user asks for news of any sort.',
-      ),
-    );
-ToolRegistry().registerTool(
-    WeatherTool(
-        name: 'weather_tool',
-        description:
-            'This tool should be used if the user asks for the weather.',
-        parameters: [
-          ParamSpec(
-            name: 'location',
-            type: 'String',
-            description: 'The location for which to get the weather.',
-            required: true,
-          ),
-        ],
-    ),
+
+#### ToolResponse flags
+
+| Field | Type | Description |
+|---|---|---|
+| `toolName` | `String` | Name of the tool that produced this response |
+| `isRequestSuccessful` | `bool` | Whether the tool operation succeeded |
+| `message` | `String` | Human-readable result shown to the user |
+| `data` | `Map?` | Structured data for agent chaining or further reasoning |
+| `needsFurtherReasoning` | `bool` | When `true`, the agent makes a second LLM call to synthesize the tool output into a natural-language answer |
+
+---
+
+### Multi-Agent Orchestration
+
+When the LLM determines a task requires multiple specialists, it returns an `agents_chain`. Agenix automatically delegates sub-tasks across agents, passing each agent's output as input to the next.
+
+```dart
+// Create specialized agents
+final newsAgent = await Agent.create(
+  dataStore: DataStore.inMemory(),
+  llm: llm,
+  name: 'News Agent',
+  role: 'Fetches and summarizes news articles.',
+);
+
+final favouritesAgent = await Agent.create(
+  dataStore: DataStore.firestoreDataStore(),
+  llm: llm,
+  name: 'Favourites Agent',
+  role: 'Manages user favourites: add, remove, and list.',
+);
+
+final orchestrator = await Agent.create(
+  dataStore: DataStore.firestoreDataStore(),
+  llm: llm,
+  name: 'Orchestrator',
+  role: 'Main user-facing agent. Delegates to News Agent and Favourites Agent.',
+);
+
+// Register tools on each agent as needed
+newsAgent.toolRegistry.registerTool(NewsTool());
+favouritesAgent.toolRegistry.registerTool(AddFavouriteTool());
+favouritesAgent.toolRegistry.registerTool(ListFavouritesTool());
+```
+
+**How chaining works:**
+
+```
+User: "Save the top headline to my favourites"
+
+┌──────────────┐     ┌────────────┐     ┌──────────────────┐
+│ Orchestrator  │────►│ News Agent │────►│ Favourites Agent │
+│              │     │            │     │                  │
+│ Decides chain│     │ Fetches    │     │ Saves headline   │
+│ [News, Favs] │     │ headlines  │     │ to favourites    │
+└──────────────┘     └────────────┘     └──────────────────┘
+                          │                      │
+                          │  output passes as    │
+                          │  input to next ──────┘
+                                                 │
+                                                 ▼
+                                          Final response
+                                          back to user
+```
+
+**Safety guardrails:**
+
+- **Cycle detection** — if an agent appears twice in the same chain, a `ConfigException` is thrown
+- **Depth limiting** — chains are capped at 5 levels deep (`kMaxChainDepth`)
+
+---
+
+### Agent Scopes
+
+By default, all agents register in `AgentScope.global` and can discover each other for chaining. Use custom scopes to isolate agent groups:
+
+```dart
+// Isolated scope for testing
+final testScope = AgentScope();
+
+final agentA = await Agent.create(
+  dataStore: DataStore.inMemory(),
+  llm: llm,
+  name: 'Agent A',
+  role: 'Test agent A.',
+  scope: testScope,
+);
+
+final agentB = await Agent.create(
+  dataStore: DataStore.inMemory(),
+  llm: llm,
+  name: 'Agent B',
+  role: 'Test agent B.',
+  scope: testScope,
+);
+
+// Agents in testScope can chain to each other, but NOT to agents in AgentScope.global
+```
+
+**RegistrationPolicy** controls what happens when an agent name collides:
+
+| Policy | Behavior |
+|---|---|
+| `throwIfExists` | Throws `ConfigException` (default — catches accidental duplicates) |
+| `replace` | Silently replaces the existing agent |
+| `ignore` | Keeps the existing agent, discards the new one |
+
+---
+
+## Error Handling
+
+Agenix uses a sealed exception hierarchy. Every exception is an `AgenixException`, so you can exhaustively match on the type:
+
+```dart
+try {
+  final response = await agent.generateResponse(
+    convoId: 'convo-1',
+    userMessage: message,
+  );
+} on LlmTimeoutException catch (e) {
+  // LLM call exceeded the configured timeout
+} on ResponseParseException catch (e) {
+  // LLM returned malformed output after retries
+  print('Raw output: ${e.rawOutput}');
+} on ToolNotFoundException catch (e) {
+  // LLM referenced a tool that isn't registered
+  print('Missing tool: ${e.toolName}');
+} on ToolExecutionException catch (e) {
+  // A registered tool threw during execution
+  print('Tool ${e.toolName} failed: ${e.message}');
+} on AgentNotFoundException catch (e) {
+  // Agent chain referenced a non-existent agent
+} on DataStoreException catch (e) {
+  // Persistence operation failed
+} on NotAuthenticatedException {
+  // Firebase operation without a signed-in user
+} on ConfigException catch (e) {
+  // Invalid configuration (bad system_data.json, duplicate agent name, etc.)
+}
+```
+
+**FailureMode** controls the behavior at the `generateResponse` boundary:
+
+| Mode | Behavior |
+|---|---|
+| `FailureMode.gracefulMessage` | Returns an `AgentMessage` with `isError: true` (default — safe for UI) |
+| `FailureMode.throwError` | Rethrows the typed `AgenixException` (use when you want full control) |
+
+The `onError` callback fires in both modes, so you can always log errors centrally:
+
+```dart
+final agent = await Agent.create(
+  // ...
+  failureMode: FailureMode.gracefulMessage,
+  onError: (error, stack) => crashlytics.recordError(error, stack),
 );
 ```
 
-Once a tool is defined and registered Agenix is capable enough to hit them when required, deduce the parameters from the input, or ask for the parameters if they are required. If your tool fails to perform the intended task, you can try adding a more defined description. If a required task falls under the responsibilities of multiple agents, agenix will engage them in a chain and delegate the sub-tasks to the respective agents. Agenix will manage the chain itself and use the output from one agent as the input of the other. 
+---
 
+## API Reference
+
+### Exported Classes
+
+| Class | Description |
+|---|---|
+| `Agent` | Core agent with LLM, memory, tools, and multi-agent orchestration |
+| `AgentScope` | Isolates groups of agents that can discover and chain to each other |
+| `LLM` | Abstract interface for language model providers |
+| `LlmConfig` | Provider-neutral generation settings (temperature, tokens, timeout, etc.) |
+| `DataStore` | Abstract interface for conversation persistence |
+| `AgentMessage` | A message in a conversation (user or agent) |
+| `Conversation` | Summary of a conversation (last message, timestamp, ID) |
+| `Tool` | Abstract class to extend for custom tools |
+| `ParameterSpecification` | Defines a tool parameter (name, type, required, default, enum) |
+| `ToolResponse` | Result returned from a tool execution |
+| `ToolRegistry` | Per-agent registry for managing available tools |
+
+### Exported Enums
+
+| Enum | Values | Description |
+|---|---|---|
+| `FailureMode` | `throwError`, `gracefulMessage` | Controls error surfacing behavior |
+| `RegistrationPolicy` | `throwIfExists`, `replace`, `ignore` | Controls duplicate agent name handling |
+
+### Sealed Exception Hierarchy
+
+```
+AgenixException (sealed)
+├── LlmException
+│   └── LlmTimeoutException
+├── ResponseParseException
+├── ToolNotFoundException
+├── ToolExecutionException
+├── AgentNotFoundException
+├── DataStoreException
+│   └── NotAuthenticatedException
+└── ConfigException
+```
+
+### Internal Constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `kMaxToolIterations` | `5` | Max tool→observe→re-prompt cycles per turn |
+| `kMaxParseRetries` | `2` | Max corrective re-prompts for malformed JSON |
+| `kMaxChainDepth` | `5` | Max depth for agent chain delegation |
+
+---
+
+## Usage Architectures
+
+### Single-Agent Chat App
+
+The simplest setup — one agent handling all user interactions.
+
+```
+┌──────────┐     ┌───────┐     ┌───────┐     ┌───────────┐
+│  Flutter  │────►│ Agent │────►│  LLM  │     │ DataStore │
+│    UI     │◄────│       │◄────│       │     │ (Firebase)│
+└──────────┘     │       │     └───────┘     └───────────┘
+                 │       │──── save/load ────►
+                 └───────┘
+```
+
+Best for: chatbots, Q&A apps, customer support widgets.
+
+### Agent + Tools (API Integration)
+
+The agent can call external APIs through tools.
+
+```
+┌──────────┐     ┌───────┐     ┌───────┐
+│  Flutter  │────►│ Agent │────►│  LLM  │
+│    UI     │◄────│       │◄────│       │
+└──────────┘     │       │     └───────┘
+                 │       │
+                 │  ToolRegistry
+                 │  ├── WeatherTool ──► Weather API
+                 │  ├── NewsTool ──► News API
+                 │  └── DbTool ──► Database
+                 └───────┘
+```
+
+Best for: apps where the agent needs to fetch real-time data or trigger actions.
+
+### Multi-Agent Orchestration
+
+Multiple specialized agents collaborating on complex tasks.
+
+```
+┌──────────┐     ┌──────────────┐
+│  Flutter  │────►│ Orchestrator │
+│    UI     │◄────│              │
+└──────────┘     └──────┬───────┘
+                        │ delegates via agents_chain
+              ┌─────────┼─────────┐
+              ▼         ▼         ▼
+        ┌─────────┐ ┌────────┐ ┌───────────┐
+        │ Search  │ │ Booking│ │ Favourites│
+        │ Agent   │ │ Agent  │ │ Agent     │
+        │ + tools │ │ + tools│ │ + tools   │
+        └─────────┘ └────────┘ └───────────┘
+```
+
+Best for: complex platforms where different domains require specialized knowledge and tools.
+
+### Testing / Prototyping Setup
+
+Use `InMemoryDataStore` and scoped agents for fast, isolated development.
+
+```dart
+final scope = AgentScope();
+
+final agent = await Agent.create(
+  dataStore: DataStore.inMemory(),  // No Firebase needed
+  llm: LLM.geminiLLM(apiKey: key, modelName: 'gemini-2.0-flash'),
+  name: 'Test Agent',
+  role: 'Agent under test.',
+  scope: scope,  // Isolated from production agents
+);
+```
+
+---
 
 ## Examples
-1. [Example of Multi Agent Systems Built Using Agenix](https://github.com/ahmadexe/agenix-examples/tree/main/multi_agent_system)
-2. [Basic usage of Agenix](https://github.com/ahmadexe/agenix/tree/main/example)
-3. [Using Agenix with Custom Data Store](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example)
 
+| Example | Description |
+|---|---|
+| [Multi-Agent System](https://github.com/ahmadexe/agenix-examples/tree/main/multi_agent_system) | Three agents (Orchestrator, News, Favourites) working together |
+| [Basic Usage](https://github.com/ahmadexe/agenix/tree/main/example) | Single agent with tools |
+| [Custom DataStore](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example) | Implementing your own persistence backend |
 
-## Visuals
+### Multi-Agent System Demo
 
-### Multi Agents System
-In this example three agents are working together:
-1. Orchestrator: The agent that is responsible for communicating with the end user.
-2. News Agent: The agent that is responsible for dealing with News API operations.
-3. Favourites Agent: The agent that manages user's favourites, marking something as favourite, removing something from favourite or fetching the user favourites!
+In this example three agents collaborate:
+1. **Orchestrator** — communicates with the end user
+2. **News Agent** — handles News API operations
+3. **Favourites Agent** — manages user favourites (add, remove, list)
 
 https://github.com/user-attachments/assets/f79cf6ac-6913-49a7-982a-bd7b975599b7
 
+#### Workflow
 
-#### Workflow:
+![Multi-Agent Workflow](https://github.com/user-attachments/assets/8ad9f4ac-018a-4092-bf8c-4fc72da81673)
 
+### Single-Agent Demo
 
-![flow](https://github.com/user-attachments/assets/8ad9f4ac-018a-4092-bf8c-4fc72da81673)
-
-
-
-### Agentic App
-An agentic app is basically an application that is powered by an AI agent, this AI agent can perform tasks for the user in the platform, using pre defined tools. The following example shows how an agent "Lens" can have a sepcific personality, it can answer questions about the platform, perform tasks using tools, etc.
-
+An agentic app powered by "Lens" — an AI agent with a specific personality that can answer platform questions and perform tasks using tools.
 
 https://github.com/user-attachments/assets/bcb56da8-4285-4661-af52-ee8dd6f31d08
 
+---
 
 ## Maintainers
+
 - [Muhammad Ahmad](https://github.com/ahmadexe)
