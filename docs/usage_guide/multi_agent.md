@@ -153,7 +153,134 @@ class CustomerService {
 }
 ```
 
-## Architecture Pattern 2: Agent Chains
+## Architecture Pattern 2: Orchestrator Agent (AI-Powered Routing)
+
+In Pattern 1, your **app logic** decides which agent to use (e.g., the user picks a department from a dropdown). But what if you can't predict which agent is needed? What if the user says something ambiguous like "I need help" and only AI can figure out the right destination?
+
+That's where the **orchestrator agent** comes in. It's a lightweight agent whose only job is to understand the user's intent and delegate to the right specialist via an agent chain.
+
+```
+User: "My order hasn't arrived and I want to return it"
+         │
+         ▼
+┌──────────────────┐
+│  Orchestrator    │ ──▶ LLM reads intent, decides: chain [order-specialist]
+│  (no tools,      │
+│   only routes)   │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ Order Specialist │ ──▶ Uses tools to look up order, initiate return
+└──────────────────┘
+         │
+         ▼
+User sees: "I found your order #4821. It's delayed due to..."
+```
+
+### Why Not Just Use One Big Agent?
+
+You might wonder: "Why not make one agent that does everything?" A few reasons:
+
+- **Focused roles produce better results.** An agent with the role "handle orders" outperforms one with the role "handle orders, products, billing, tech support, and complaints." Narrower context = better LLM output.
+- **Different tasks may need different LLM configs.** Your researcher might need low temperature (factual), while your writer needs high temperature (creative).
+- **Tools stay organized.** Each specialist only has the tools it needs, reducing confusion for the LLM.
+
+### Example: AI-Powered Customer Service Router
+
+```dart
+class AiCustomerService {
+  late final Agent _orchestrator;
+  late final Agent _supportAgent;
+  late final Agent _salesAgent;
+  late final Agent _techAgent;
+
+  Future<void> initialize(String apiKey) async {
+    final dataStore = DataStore.inMemory();
+    final llm = LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-2.0-flash');
+
+    // Specialist agents — each has a focused role and its own tools
+    _supportAgent = await Agent.create(
+      dataStore: dataStore,
+      llm: llm,
+      name: 'support',
+      role: 'Handles general customer support: returns, refunds, '
+          'account issues, and complaints.',
+    );
+    _supportAgent.toolRegistry.registerTool(RefundTool());
+    _supportAgent.toolRegistry.registerTool(AccountLookupTool());
+
+    _salesAgent = await Agent.create(
+      dataStore: dataStore,
+      llm: llm,
+      name: 'sales',
+      role: 'Handles product inquiries, pricing, comparisons, '
+          'and purchase assistance.',
+    );
+    _salesAgent.toolRegistry.registerTool(ProductSearchTool());
+    _salesAgent.toolRegistry.registerTool(PriceCompareTool());
+
+    _techAgent = await Agent.create(
+      dataStore: dataStore,
+      llm: llm,
+      name: 'tech-support',
+      role: 'Handles technical troubleshooting, setup guides, '
+          'connectivity issues, and bug reports.',
+    );
+    _techAgent.toolRegistry.registerTool(DiagnosticsTool());
+
+    // Orchestrator — no tools, only routes to the right specialist.
+    // It sees all 3 agents above because they share the same scope.
+    _orchestrator = await Agent.create(
+      dataStore: dataStore,
+      llm: llm,
+      name: 'orchestrator',
+      role: 'You are a routing agent. Your ONLY job is to understand '
+          'the user\'s intent and delegate to the right specialist agent. '
+          'Do NOT answer questions yourself. Always delegate to one of: '
+          'support (returns, refunds, account), sales (products, pricing), '
+          'or tech-support (troubleshooting, bugs).',
+    );
+  }
+
+  /// User always talks to the orchestrator — it figures out the rest
+  Future<AgentMessage> chat(String convoId, String message) {
+    return _orchestrator.generateResponse(
+      convoId: convoId,
+      userMessage: AgentMessage(
+        content: message,
+        generatedAt: DateTime.now(),
+        isFromAgent: false,
+      ),
+    );
+  }
+
+  void dispose() {
+    _orchestrator.dispose();
+    _supportAgent.dispose();
+    _salesAgent.dispose();
+    _techAgent.dispose();
+  }
+}
+```
+
+### Key Points About the Orchestrator Pattern
+
+1. **The orchestrator has no tools.** Its only job is routing. Don't give it tools — that muddies its purpose.
+2. **Write a strict role.** Tell it explicitly: "Do NOT answer questions yourself. Always delegate." Otherwise the LLM might try to answer directly.
+3. **All agents must be in the same scope.** The orchestrator can only see and delegate to agents in its scope. By default, all agents share `AgentScope.global`.
+4. **The orchestrator sees agent names and roles.** Agenix's prompt builder automatically tells the LLM about every agent in scope (name + role), so the orchestrator can make informed routing decisions.
+5. **Delegated agents respond directly.** When the orchestrator chains to a specialist, that specialist processes the request with its own tools and returns the answer to the user. The specialist cannot re-chain (this prevents loops).
+
+### When to Use Orchestrator vs. Independent Agents
+
+| Scenario | Use |
+|----------|-----|
+| User explicitly picks a category (dropdown, tab) | Independent agents (Pattern 1) |
+| Free-text input where intent is ambiguous | Orchestrator agent (Pattern 2) |
+| Mixed — some routes are obvious, some need AI | Orchestrator with a simple pre-filter in app code |
+
+## Architecture Pattern 3: Agent Chains (Pipelines)
 
 The LLM itself decides to delegate work to other agents. When an agent realizes it needs help, it can trigger a chain — passing its task to other agents in sequence, where each agent's output feeds into the next.
 
@@ -261,7 +388,7 @@ Agenix has built-in safety mechanisms for agent chains:
 - **Depth limit:** Chains are limited to **5 levels** deep to prevent runaway delegation.
 - **Chained agents can't re-chain:** When an agent is called as part of a chain, it can only use tools or respond directly — it cannot start a new chain. This prevents infinite loops.
 
-## Architecture Pattern 3: Scoped Agent Groups
+## Architecture Pattern 4: Scoped Agent Groups
 
 Use `AgentScope` to create isolated groups of agents that can only see each other:
 
@@ -329,6 +456,7 @@ final reportWriter = await Agent.create(
 | Pattern | Use When | Example |
 |---------|----------|---------|
 | **Independent Agents** | Your app controls routing; agents don't need to talk to each other | Department-based support, tabbed AI features |
+| **Orchestrator Agent** | Free-text input where AI must decide which specialist to use | AI-powered customer service, open-ended chat with multiple capabilities |
 | **Agent Chains** | Tasks naturally flow as pipelines; one agent's output feeds another | Research → Write, Analyze → Summarize |
 | **Scoped Groups** | You have multiple teams of agents that should be isolated | Content team, Analytics team, separate customer tenants |
 
