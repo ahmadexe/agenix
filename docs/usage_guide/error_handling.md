@@ -242,7 +242,7 @@ Future<DataStore> createDataStore() async {
 
 1. **Use `gracefulMessage` for user-facing agents.** Users don't want to see stack traces. Log errors with `onError` and show friendly messages.
 
-2. **Use `throwException` for backend/service agents.** When you need programmatic control over error recovery.
+2. **Use `throwError` for backend/service agents.** When you need programmatic control over error recovery.
 
 3. **Always set `onError`.** Even with graceful mode, you want to know when things go wrong. Connect it to your error tracking (Sentry, Crashlytics, etc.).
 
