@@ -1,4 +1,16 @@
 ## 4.0.0
+- **BREAKING**: Removed `DataStore.firestoreDataStore()` and all Firebase dependencies from core. Firebase support is now in the separate `agenix_firebase` package.
+  ```diff
+  # pubspec.yaml
+    dependencies:
+      agenix: ^4.0.0
+  +   agenix_firebase: ^1.0.0
+
+  # dart
+  + import 'package:agenix_firebase/agenix_firebase.dart';
+  - final store = DataStore.firestoreDataStore();
+  + final store = FirebaseDataStore();
+  ```
 - Sealed exception hierarchy (`AgenixException`) with typed subclasses: `LlmException`, `LlmTimeoutException`, `ResponseParseException`, `ToolNotFoundException`, `ToolExecutionException`, `AgentNotFoundException`, `DataStoreException`, `NotAuthenticatedException`, `ConfigException`
 - `FailureMode` enum — choose between throwing typed exceptions or receiving graceful error messages
 - Optional `onError` callback on `Agent` for centralized error handling

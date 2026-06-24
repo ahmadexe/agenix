@@ -7,7 +7,6 @@ import 'package:agenix/src/llm/llm.dart';
 import 'package:agenix/src/memory/data/agent_message.dart';
 import 'package:agenix/src/memory/data/conversation.dart';
 import 'package:agenix/src/memory/data/data_store.dart';
-import 'package:agenix/src/memory/data_sources/_firebase.dart';
 import 'package:agenix/src/memory/data_sources/_in_memory.dart';
 import 'package:agenix/src/static/_pkg_constants.dart';
 import 'package:agenix/src/static/agenix_exceptions.dart';

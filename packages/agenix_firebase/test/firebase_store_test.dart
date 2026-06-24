@@ -1,7 +1,7 @@
 // firebase_storage_mocks is incompatible with firebase_storage ^13.0.0.
 // We use mocktail to create a minimal FirebaseStorage mock.
 import 'package:agenix/agenix.dart';
-import 'package:agenix/src/memory/data_sources/_firebase.dart';
+import 'package:agenix_firebase/agenix_firebase.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:firebase_storage/firebase_storage.dart';

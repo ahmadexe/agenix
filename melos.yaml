@@ -1,0 +1,27 @@
+name: agenix
+
+packages:
+  - packages/**
+
+command:
+  bootstrap:
+    runPubGetInParallel: true
+  version:
+    updateGitTagRefs: true
+
+scripts:
+  analyze:
+    run: melos exec -- flutter analyze --fatal-infos
+    description: Analyze all packages.
+
+  format-check:
+    run: melos exec -- dart format --output=none --set-exit-if-changed .
+    description: Fail if any package is unformatted.
+
+  test:
+    run: melos exec --dir-exists=test -- flutter test
+    description: Run tests in every package that has a test/ dir.
+
+  test:coverage:
+    run: melos exec --dir-exists=test -- flutter test --coverage
+    description: Run tests with coverage in every package.

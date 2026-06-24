@@ -1,4 +1,5 @@
 import 'package:agenix/agenix.dart';
+import 'package:agenix_firebase/agenix_firebase.dart';
 import 'package:basic_app/firebase_options.dart';
 import 'package:basic_app/services/firebase_service.dart';
 import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
@@ -47,7 +48,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Future<void> initAgent() async {
     const apiKey = String.fromEnvironment('GEMINI_API_KEY');
     agent = await Agent.create(
-      dataStore: DataStore.firestoreDataStore(),
+      dataStore: FirebaseDataStore(),
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'General Purpose Agent',
       role: 'This is the main agent for the platform.',

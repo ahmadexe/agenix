@@ -1,0 +1,34 @@
+name: agenix
+description: "Build smart AI agents in Flutter with memory, tools, and LLMs like Gemini. Fast, pluggable, and developer-friendly."
+version: 4.0.0
+homepage: https://github.com/ahmadexe/agenix
+repository: https://github.com/ahmadexe/agenix
+
+resolution: workspace
+
+environment:
+  sdk: ^3.7.2
+  flutter: ">=1.17.0"
+
+keywords:
+  - flutter
+  - ai
+  - prompt
+  - gemini
+  - tools
+  - llm
+  - agentic
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_generative_ai: ^0.4.7
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ">=5.0.0 <7.0.0"
+  mocktail: ^1.0.4
+
+flutter:
