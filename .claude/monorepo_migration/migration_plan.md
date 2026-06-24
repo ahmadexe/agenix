@@ -61,8 +61,8 @@ So: **a monorepo with split packages is correct.** Proceed.
 
 ### Breaking-change note (READ THIS)
 Removing `firestoreDataStore()` from the core package is an **API break**.
-- Core `agenix` goes **4.0.0 → 5.0.0**.
-- `agenix_firebase` starts at **1.0.0** (or `5.0.0` to mirror core — see Phase 9).
+- Core `agenix` goes **3.0.0 -> 4.0.0**.
+- `agenix_firebase` starts at **1.0.0** (or `4.0.0` to mirror core — see Phase 9).
 - Existing users migrate by: adding `agenix_firebase` to `pubspec.yaml` and
   changing `DataStore.firestoreDataStore(...)` → `FirebaseDataStore(...)`.
 
@@ -217,7 +217,7 @@ Removing `firestoreDataStore()` from the core package is an **API break**.
    ```yaml
    name: agenix
    description: "Build smart AI agents in Flutter with memory, tools, and LLMs like Gemini. Fast, pluggable, and developer-friendly."
-   version: 5.0.0           # MAJOR bump: firebase removed (breaking)
+   version: 4.0.0           # MAJOR bump: firebase removed (breaking)
    homepage: https://github.com/ahmadexe/agenix
    repository: https://github.com/ahmadexe/agenix
 
@@ -354,7 +354,7 @@ Removing `firestoreDataStore()` from the core package is an **API break**.
    dependencies:
      flutter:
        sdk: flutter
-     agenix: ^5.0.0          # path resolved via workspace locally; ^5.0.0 on pub.dev
+     agenix: ^4.0.0          # path resolved via workspace locally; ^4.0.0 on pub.dev
      firebase_core: ^4.0.0
      firebase_auth: ^6.0.0
      cloud_firestore: ^6.0.0
@@ -376,9 +376,9 @@ Removing `firestoreDataStore()` from the core package is an **API break**.
 
    flutter:
    ```
-   > **Important — the `agenix: ^5.0.0` constraint:** While developing in the
+   > **Important — the `agenix: ^4.0.0` constraint:** While developing in the
    > monorepo, pub workspaces resolve `agenix` from the local path automatically.
-   > When `agenix_firebase` is published to pub.dev, the `^5.0.0` constraint is what
+   > When `agenix_firebase` is published to pub.dev, the `^4.0.0` constraint is what
    > consumers get. Do **not** use a `path:` dependency in the committed pubspec —
    > pub.dev rejects path deps on publish. The workspace handles local linking.
 
@@ -463,7 +463,7 @@ Google services files). It belongs with `agenix_firebase`.
    - It currently depends on `agenix` (likely via path `../`). Point it at both:
      ```yaml
      dependencies:
-       agenix: ^5.0.0
+       agenix: ^4.0.0
        agenix_firebase: ^1.0.0
      ```
      (Workspace resolves these locally. If the example is **not** listed as a
@@ -599,7 +599,7 @@ jobs:
 Single-package tag scheme (`vX.Y.Z`) no longer disambiguates which package to
 publish. Switch to **per-package tags**:
 
-- `agenix-v5.0.0` → publishes `packages/agenix`
+- `agenix-v4.0.0` → publishes `packages/agenix`
 - `agenix_firebase-v1.0.0` → publishes `packages/agenix_firebase`
 
 ```yaml
@@ -765,7 +765,7 @@ updates:
    usage, the auth requirement (`NotAuthenticatedException`), Firestore schema
    (`chats/{uid}/conversations/{id}/messages`), Storage image handling.
 4. **CHANGELOGs:**
-   - `packages/agenix/CHANGELOG.md`: add `## 5.0.0` — **BREAKING**: removed
+   - `packages/agenix/CHANGELOG.md`: add `## 4.0.0` — **BREAKING**: removed
      `DataStore.firestoreDataStore()` and Firebase deps; moved to `agenix_firebase`.
      Include a migration snippet.
    - `packages/agenix_firebase/CHANGELOG.md`: new, `## 1.0.0` — initial release,
@@ -774,7 +774,7 @@ updates:
    ```diff
    # pubspec.yaml
      dependencies:
-       agenix: ^5.0.0
+       agenix: ^4.0.0
    +   agenix_firebase: ^1.0.0
 
    # dart
@@ -791,7 +791,7 @@ updates:
 
 ## 10. Phase 9 — Release
 
-Order matters: `agenix_firebase` depends on `agenix ^5.0.0`, so core must be on
+Order matters: `agenix_firebase` depends on `agenix ^4.0.0`, so core must be on
 pub.dev first.
 
 1. Final full verification:
@@ -807,7 +807,7 @@ pub.dev first.
 2. Merge the migration PR to `main` (CI green).
 3. Tag + publish **core first**:
    ```bash
-   git tag agenix-v5.0.0 && git push origin agenix-v5.0.0
+   git tag agenix-v4.0.0 && git push origin agenix-v4.0.0
    ```
    Wait for it to appear on pub.dev.
 4. Tag + publish **firebase**:
@@ -849,8 +849,8 @@ pub.dev first.
 The migration is a single PR. If something is wrong post-merge but pre-publish:
 - Revert the PR; the repo returns to the single-package layout.
 Once **published**, pub.dev versions are immutable:
-- You cannot un-publish `agenix 5.0.0`. Fix forward with `5.0.1`.
-- Consumers on `agenix ^4.x` are unaffected until they opt into `^5.0.0`.
+- You cannot un-publish `agenix 4.0.0`. Fix forward with `5.0.1`.
+- Consumers on `agenix ^3.x` are unaffected until they opt into `^4.0.0`.
 
 ---
 
@@ -860,7 +860,7 @@ Once **published**, pub.dev versions are immutable:
 |---|---|---|
 | Monorepo vs optional deps | Monorepo | pub has no optional deps; this is the idiomatic FlutterFire-style pattern |
 | Resolution mechanism | pub workspaces + Melos 6 | Native, future-proof; Melos for scripts/versioning |
-| Core version | 5.0.0 | Removing `firestoreDataStore()` is breaking |
+| Core version | 4.0.0 | Removing `firestoreDataStore()` is breaking |
 | Firebase version | 1.0.0 | New package; independent versioning |
 | Shared test contract | Duplicate the file | Tiny, dependency-free; avoids a 3rd published pkg |
 | Release tags | Per-package `name-vX.Y.Z` | One tag scheme can't target two packages |
@@ -875,5 +875,5 @@ To add `agenix_supabase` / `agenix_hive` later:
 3. Barrel `agenix_<backend>.dart` exporting the public store.
 4. Copy `datastore_contract.dart`, write `<backend>_store_test.dart`.
 5. Add Dependabot entry + publish tag pattern.
-6. Version 1.0.0, depend on `agenix: ^5.0.0`.
+6. Version 1.0.0, depend on `agenix: ^4.0.0`.
 No core changes required — that is the payoff of the `DataStore` abstraction.

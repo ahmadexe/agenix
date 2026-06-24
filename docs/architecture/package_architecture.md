@@ -196,7 +196,7 @@ Two layers cooperate:
 
 - **pub workspaces** (the `workspace:` list in the root `pubspec.yaml`, plus
   `resolution: workspace` in each member) do **dependency resolution**. Locally,
-  `agenix_firebase`'s `agenix: ^5.0.0` resolves to the in-repo copy automatically —
+  `agenix_firebase`'s `agenix: ^4.0.0` resolves to the in-repo copy automatically —
   no `path:` overrides, no stale links. One `dart pub get` at the root resolves
   everything.
 - **Melos** provides **multi-package commands** (`melos run analyze`,
