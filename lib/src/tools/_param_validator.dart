@@ -28,7 +28,8 @@ ValidationResult validateParams(
   final knownNames = specs.map((s) => s.name).toSet();
 
   for (final spec in specs) {
-    final hasValue = rawParams.containsKey(spec.name) && rawParams[spec.name] != null;
+    final hasValue =
+        rawParams.containsKey(spec.name) && rawParams[spec.name] != null;
 
     if (!hasValue) {
       if (spec.defaultValue != null) {
@@ -100,11 +101,15 @@ dynamic _coerce(
       return null;
     case 'object':
       if (value is Map) return Map<String, dynamic>.from(value);
-      errors.add('Parameter $paramName: expected object, got ${value.runtimeType}');
+      errors.add(
+        'Parameter $paramName: expected object, got ${value.runtimeType}',
+      );
       return null;
     case 'array':
       if (value is List) return value;
-      errors.add('Parameter $paramName: expected array, got ${value.runtimeType}');
+      errors.add(
+        'Parameter $paramName: expected array, got ${value.runtimeType}',
+      );
       return null;
     default:
       return value;

@@ -15,7 +15,7 @@ class Gemini extends LLM {
 
   /// Creates an instance of the Gemini class with the provided API key and model name.
   Gemini({required String apiKey, required String modelName})
-      : _modelName = modelName {
+    : _modelName = modelName {
     _model = GenerativeModel(model: modelName, apiKey: apiKey);
   }
 
@@ -39,11 +39,7 @@ class Gemini extends LLM {
     } on AgenixException {
       rethrow;
     } catch (e, st) {
-      throw LlmException(
-        'LLM call failed: $e',
-        cause: e,
-        causeStack: st,
-      );
+      throw LlmException('LLM call failed: $e', cause: e, causeStack: st);
     }
   }
 

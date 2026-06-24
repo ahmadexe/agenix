@@ -20,6 +20,10 @@ class _MemoryManager {
     int? limit,
     Object? metaData,
   }) async {
-    return await dataStore.getMessages(convoId, limit: limit, metaData: metaData);
+    return await dataStore.getMessages(
+      convoId,
+      limit: limit,
+      metaData: metaData,
+    );
   }
 }

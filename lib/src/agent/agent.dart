@@ -138,7 +138,11 @@ class Agent {
 
       // Save both messages after generation so the user message isn't
       // duplicated in the context that was just sent to the LLM.
-      await _memoryManager.saveMessage(convoId, userMessage, metaData: metaData);
+      await _memoryManager.saveMessage(
+        convoId,
+        userMessage,
+        metaData: metaData,
+      );
       await _memoryManager.saveMessage(convoId, response, metaData: metaData);
       return response;
     } on AgenixException catch (e, st) {
@@ -151,7 +155,11 @@ class Agent {
         isError: true,
       );
     } catch (e, st) {
-      final wrapped = LlmException('Unexpected error: $e', cause: e, causeStack: st);
+      final wrapped = LlmException(
+        'Unexpected error: $e',
+        cause: e,
+        causeStack: st,
+      );
       onError?.call(wrapped, st);
       if (failureMode == FailureMode.throwError) throw wrapped;
       return AgentMessage(
@@ -205,7 +213,8 @@ class Agent {
             content: response,
             isFromAgent: true,
             generatedAt: DateTime.now(),
-            data: observations.isNotEmpty ? {'observations': observations} : null,
+            data:
+                observations.isNotEmpty ? {'observations': observations} : null,
           );
 
         case ParseOutcome.agentsChain:
@@ -220,7 +229,10 @@ class Agent {
           );
 
         case ParseOutcome.tools:
-          final toolResponses = await _toolRunner.runTools(parsed, toolRegistry);
+          final toolResponses = await _toolRunner.runTools(
+            parsed,
+            toolRegistry,
+          );
 
           for (final r in toolResponses) {
             observations.add({
@@ -236,10 +248,7 @@ class Agent {
           );
 
           if (needsFurtherReasoning) {
-            return _reasonUsingData(
-              userMessage.content,
-              toolResponses,
-            );
+            return _reasonUsingData(userMessage.content, toolResponses);
           }
 
           // Build a follow-up prompt with observations so the LLM can
@@ -385,12 +394,8 @@ class Agent {
   }
 
   /// Get all conversations from the datastore.
-  Future<List<Conversation>> getAllConversations({
-    Object? metaData,
-  }) {
-    return _memoryManager.dataStore.getConversations(
-      metaData: metaData,
-    );
+  Future<List<Conversation>> getAllConversations({Object? metaData}) {
+    return _memoryManager.dataStore.getConversations(metaData: metaData);
   }
 
   /// Delete a conversation from the datastore.
@@ -408,11 +413,16 @@ class Agent {
     String originalPrompt,
     List<ToolResponse> toolResponses,
   ) async {
-    final toolData = toolResponses.map((r) => {
-      'tool': r.toolName,
-      'message': r.message,
-      if (r.data != null) 'data': r.data,
-    }).toList();
+    final toolData =
+        toolResponses
+            .map(
+              (r) => {
+                'tool': r.toolName,
+                'message': r.message,
+                if (r.data != null) 'data': r.data,
+              },
+            )
+            .toList();
 
     final result = await llm.generate(
       prompt:
