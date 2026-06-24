@@ -103,9 +103,17 @@ class PromptParser {
       final List<String> tools;
       if (rawTools is String) {
         tools =
-            rawTools.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+            rawTools
+                .split(',')
+                .map((t) => t.trim())
+                .where((t) => t.isNotEmpty)
+                .toList();
       } else if (rawTools is List) {
-        tools = rawTools.map((e) => e.toString().trim()).where((t) => t.isNotEmpty).toList();
+        tools =
+            rawTools
+                .map((e) => e.toString().trim())
+                .where((t) => t.isNotEmpty)
+                .toList();
       } else {
         return _unparseable(llmOutputJson);
       }
@@ -116,9 +124,10 @@ class PromptParser {
 
       final Map<String, Map<String, dynamic>> params = {
         for (String tool in tools)
-          tool: rawParamsMap[tool] is Map
-              ? Map<String, dynamic>.from(rawParamsMap[tool])
-              : <String, dynamic>{},
+          tool:
+              rawParamsMap[tool] is Map
+                  ? Map<String, dynamic>.from(rawParamsMap[tool])
+                  : <String, dynamic>{},
       };
 
       return PromptParserResult(

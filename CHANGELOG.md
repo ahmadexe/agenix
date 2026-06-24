@@ -1,3 +1,24 @@
+## 4.0.0
+- Sealed exception hierarchy (`AgenixException`) with typed subclasses: `LlmException`, `LlmTimeoutException`, `ResponseParseException`, `ToolNotFoundException`, `ToolExecutionException`, `AgentNotFoundException`, `DataStoreException`, `NotAuthenticatedException`, `ConfigException`
+- `FailureMode` enum — choose between throwing typed exceptions or receiving graceful error messages
+- Optional `onError` callback on `Agent` for centralized error handling
+- `AgentScope` — isolate groups of agents for multi-tenant or testing scenarios
+- `RegistrationPolicy` enum — control duplicate agent names (`throwIfExists`, `replace`, `ignore`)
+- `LlmConfig` — provider-neutral generation settings: `temperature`, `maxOutputTokens`, `topP`, `topK`, `stopSequences`, `jsonMode`, `timeout`
+- `InMemoryDataStore` — zero-dependency data store for testing and prototyping (`DataStore.inMemory()`)
+- Multi-step tool iterations — agent can call tools in a loop (up to 5 iterations), accumulating observations before producing a final response
+- Parse-retry mechanism — automatic corrective re-prompts (up to 2 retries) when the LLM returns malformed JSON
+- Agent chain cycle detection and depth limiting (`kMaxChainDepth = 5`)
+- `Agent.dispose()` — explicit cleanup to unregister agents from their scope
+- `isError` field on `AgentMessage` — error messages are excluded from conversation history sent to the LLM
+- `ParameterSpecification` now supports `defaultValue` and `enumValues` for richer tool parameter definitions
+- CI pipeline with formatting, analysis, test coverage enforcement (50% floor), and Codecov integration
+
+### Breaking Changes
+- Exception types replaced — code catching generic exceptions must switch to the sealed `AgenixException` hierarchy
+- `Agent.create()` signature expanded with `failureMode`, `scope`, and `registrationPolicy` parameters (all have defaults)
+- `LLM` interface now requires `modelId` getter and `config` getter returning `LlmConfig`
+
 ## 3.0.0
 - Support for multiple agents
 - Agents can reiterate over tool responses

@@ -28,9 +28,9 @@ class FirebaseDataStore extends DataStore {
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     FirebaseStorage? storage,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _storage = storage ?? FirebaseStorage.instance;
 
   String _resolveUserId() {
     final user = _auth.currentUser;
@@ -65,14 +65,16 @@ class FirebaseDataStore extends DataStore {
     } on AgenixException {
       rethrow;
     } catch (e, st) {
-      throw DataStoreException('Error deleting conversation', cause: e, causeStack: st);
+      throw DataStoreException(
+        'Error deleting conversation',
+        cause: e,
+        causeStack: st,
+      );
     }
   }
 
   @override
-  Future<List<Conversation>> getConversations({
-    Object? metaData,
-  }) async {
+  Future<List<Conversation>> getConversations({Object? metaData}) async {
     try {
       final userId = _resolveUserId();
       final ref = _firestore
@@ -89,7 +91,11 @@ class FirebaseDataStore extends DataStore {
     } on AgenixException {
       rethrow;
     } catch (e, st) {
-      throw DataStoreException('Error fetching conversations', cause: e, causeStack: st);
+      throw DataStoreException(
+        'Error fetching conversations',
+        cause: e,
+        causeStack: st,
+      );
     }
   }
 
@@ -111,10 +117,11 @@ class FirebaseDataStore extends DataStore {
       QuerySnapshot<Map<String, dynamic>> snapshots;
       if (limit != null) {
         // Fetch the most recent N messages (descending), then reverse to oldest-first
-        snapshots = await ref
-            .orderBy('generatedAt', descending: true)
-            .limit(limit)
-            .get();
+        snapshots =
+            await ref
+                .orderBy('generatedAt', descending: true)
+                .limit(limit)
+                .get();
         if (snapshots.docs.isEmpty) return [];
         return snapshots.docs.reversed
             .map((doc) => AgentMessage.fromMap(doc.data()))
@@ -129,7 +136,11 @@ class FirebaseDataStore extends DataStore {
     } on AgenixException {
       rethrow;
     } catch (e, st) {
-      throw DataStoreException('Error fetching recent messages', cause: e, causeStack: st);
+      throw DataStoreException(
+        'Error fetching recent messages',
+        cause: e,
+        causeStack: st,
+      );
     }
   }
 
@@ -175,7 +186,11 @@ class FirebaseDataStore extends DataStore {
     } on AgenixException {
       rethrow;
     } catch (e, st) {
-      throw DataStoreException('Error saving message', cause: e, causeStack: st);
+      throw DataStoreException(
+        'Error saving message',
+        cause: e,
+        causeStack: st,
+      );
     }
   }
 }

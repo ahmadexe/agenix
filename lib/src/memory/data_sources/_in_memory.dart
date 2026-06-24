@@ -50,9 +50,7 @@ class InMemoryDataStore extends DataStore {
   }
 
   @override
-  Future<List<Conversation>> getConversations({
-    Object? metaData,
-  }) async {
+  Future<List<Conversation>> getConversations({Object? metaData}) async {
     return _conversations.values.toList();
   }
 }

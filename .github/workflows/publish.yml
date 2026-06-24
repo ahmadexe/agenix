@@ -1,0 +1,50 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  guard:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: guard
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.3
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify tag matches pubspec version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PUB=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          echo "tag=$TAG pubspec=$PUB"
+          test "$TAG" = "$PUB" || { echo "::error::Tag v$TAG != pubspec $PUB"; exit 1; }
+
+      - name: Publish dry-run
+        run: dart pub publish --dry-run
+
+      - name: Enforce pana score (min 150)
+        run: |
+          dart pub global activate pana
+          SCORE=$(dart pub global run pana --no-warning . 2>/dev/null | grep -oE 'Package scoring: [0-9]+' | grep -oE '[0-9]+')
+          echo "Pana score: ${SCORE}/160"
+          if [ -z "$SCORE" ]; then echo "::error::Could not parse pana score"; exit 1; fi
+          if [ "$SCORE" -lt 150 ]; then echo "::error::Pana score $SCORE is below minimum 150"; exit 1; fi
+
+      - name: Publish
+        run: dart pub publish --force

@@ -6,6 +6,7 @@ export 'src/agent/agent_scope.dart';
 
 // LLM
 export 'src/llm/llm.dart';
+export 'src/llm/llm_config.dart';
 
 // Memory
 export 'src/memory/data/agent_message.dart';

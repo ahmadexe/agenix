@@ -31,3 +31,6 @@ migrate_working_dir/
 build/
 
 replacements.txt
+
+# Coverage
+coverage/

@@ -50,7 +50,7 @@ class ToolNotFoundException extends AgenixException {
 
   /// Creates a [ToolNotFoundException] for [toolName].
   const ToolNotFoundException(this.toolName)
-      : super('Tool $toolName not found in registry');
+    : super('Tool $toolName not found in registry');
 }
 
 /// Thrown when a registered tool's [run] method throws during execution.
@@ -74,7 +74,7 @@ class AgentNotFoundException extends AgenixException {
 
   /// Creates an [AgentNotFoundException] for [agentName].
   const AgentNotFoundException(this.agentName)
-      : super('Agent $agentName not found in registry');
+    : super('Agent $agentName not found in registry');
 }
 
 /// Thrown when a [DataStore] operation fails.
@@ -87,9 +87,9 @@ class DataStoreException extends AgenixException {
 class NotAuthenticatedException extends DataStoreException {
   /// Creates a [NotAuthenticatedException].
   const NotAuthenticatedException()
-      : super(
-          'No authenticated user found. Sign in before using the data store.',
-        );
+    : super(
+        'No authenticated user found. Sign in before using the data store.',
+      );
 }
 
 /// Thrown when agent configuration is invalid (e.g. malformed system_data.json).

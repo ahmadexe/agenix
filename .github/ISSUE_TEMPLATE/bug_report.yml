@@ -1,0 +1,34 @@
+name: Bug report
+description: Something isn't working as documented
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the smallest repro you can.
+    validations:
+      required: true
+  - type: input
+    id: agenix-version
+    attributes:
+      label: Agenix version
+    validations:
+      required: true
+  - type: input
+    id: flutter-version
+    attributes:
+      label: Flutter/Dart version (flutter --version)
+    validations:
+      required: true
+  - type: dropdown
+    id: llm
+    attributes:
+      label: LLM provider
+      options:
+        - Gemini
+        - Other/custom
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / stack trace

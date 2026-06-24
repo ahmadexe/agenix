@@ -33,9 +33,7 @@ abstract class DataStore {
   Future<void> deleteConversation(String conversationId, {Object? metaData});
 
   /// Returns all conversations for the current user.
-  Future<List<Conversation>> getConversations({
-    Object? metaData,
-  });
+  Future<List<Conversation>> getConversations({Object? metaData});
 
   /// Creates a [FirebaseDataStore]. Accepts optional Firebase instances for
   /// dependency injection in tests.
@@ -43,12 +41,7 @@ abstract class DataStore {
     dynamic firestore,
     dynamic auth,
     dynamic storage,
-  }) =>
-      FirebaseDataStore(
-        firestore: firestore,
-        auth: auth,
-        storage: storage,
-      );
+  }) => FirebaseDataStore(firestore: firestore, auth: auth, storage: storage);
 
   /// Creates an [InMemoryDataStore] — no Firebase dependency, data lives only
   /// for the lifetime of the instance. Ideal for tests and prototyping.
