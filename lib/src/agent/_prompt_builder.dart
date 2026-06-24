@@ -13,6 +13,9 @@ class _PromptBuilder {
     required this.scope,
   });
 
+  /// The system instruction block, passed separately via LLM's systemInstruction param.
+  String get systemInstruction => json.encode(systemPrompt);
+
   String buildTextPrompt({
     List<AgentMessage>? memoryMessages,
     required AgentMessage userMessage,
@@ -20,9 +23,6 @@ class _PromptBuilder {
     String? input,
   }) {
     final buffer = StringBuffer();
-
-    // --- System context ---
-    buffer.writeln('System Instruction: ${json.encode(systemPrompt)}\n');
 
     // --- Agents in scope ---
     if (!isPartOfChain) {

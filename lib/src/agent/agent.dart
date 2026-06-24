@@ -294,6 +294,7 @@ class Agent {
     for (var attempt = 0; attempt <= kMaxParseRetries; attempt++) {
       final raw = await llm.generate(
         prompt: currentPrompt,
+        systemInstruction: _promptBuilder.systemInstruction,
         rawData: attempt == 0 ? rawData : null,
       );
       final parsed = _promptParser.parse(raw);
@@ -430,6 +431,7 @@ class Agent {
           'in the original prompt using this data.\n\n'
           'Tool results: ${json.encode(toolData)}\n\n'
           'Original prompt: $originalPrompt',
+      systemInstruction: _promptBuilder.systemInstruction,
     );
 
     return AgentMessage(
