@@ -13,6 +13,7 @@
 - `isError` field on `AgentMessage` — error messages are excluded from conversation history sent to the LLM
 - `ParameterSpecification` now supports `defaultValue` and `enumValues` for richer tool parameter definitions
 - CI pipeline with formatting, analysis, test coverage enforcement (50% floor), and Codecov integration
+- Mimetype is not forced anymore.
 
 ### Breaking Changes
 - Exception types replaced — code catching generic exceptions must switch to the sealed `AgenixException` hierarchy
