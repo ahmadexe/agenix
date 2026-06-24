@@ -14,6 +14,47 @@ A Flutter package for building AI agents with memory, tools, and multi-agent orc
 
 ---
 
+## Packages
+
+This is a monorepo containing the following packages:
+
+| Package | pub.dev | Description |
+|---|---|---|
+| [`agenix`](packages/agenix/) | [![Pub](https://img.shields.io/pub/v/agenix.svg)](https://pub.dev/packages/agenix) | Core — agents, tools, LLM interface, in-memory data store |
+| [`agenix_firebase`](packages/agenix_firebase/) | [![Pub](https://img.shields.io/pub/v/agenix_firebase.svg)](https://pub.dev/packages/agenix_firebase) | Firebase (Firestore + Storage + Auth) data store backend |
+
+### Choosing a data store
+
+The core `agenix` package ships with `DataStore.inMemory()` — a zero-dependency store for testing and prototyping. For production persistence, add a backend package:
+
+```yaml
+# Core only (no Firebase):
+dependencies:
+  agenix: ^4.0.0
+
+# With Firebase persistence:
+dependencies:
+  agenix: ^4.0.0
+  agenix_firebase: ^1.0.0
+```
+
+```dart
+import 'package:agenix/agenix.dart';
+
+// In-memory (no extra package needed):
+final store = DataStore.inMemory();
+
+// Firebase (requires agenix_firebase):
+import 'package:agenix_firebase/agenix_firebase.dart';
+final store = FirebaseDataStore();
+```
+
+This separation means apps that don't use Firebase never pull in the Firebase SDK.
+
+> **Migrating from agenix 3.x?** Replace `DataStore.firestoreDataStore()` with `FirebaseDataStore()` and add `agenix_firebase` to your pubspec. See the [core CHANGELOG](packages/agenix/CHANGELOG.md) for details.
+
+---
+
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
@@ -54,8 +95,8 @@ A Flutter package for building AI agents with memory, tools, and multi-agent orc
 │   ▼           ▼                   ▼                         │
 │ ┌──────┐  ┌──────────┐  ┌────────────────┐                 │
 │ │Tools │  │DataStore  │  │Agent Registry  │                 │
-│ │      │  │(Firebase/ │  │(Multi-Agent    │                 │
-│ │      │  │ InMemory/ │  │ Orchestration) │                 │
+│ │      │  │(InMemory/ │  │(Multi-Agent    │                 │
+│ │      │  │ Firebase/ │  │ Orchestration) │                 │
 │ │      │  │ Custom)   │  │               │                  │
 │ └──────┘  └──────────┘  └────────────────┘                 │
 └─────────────────────────────────────────────────────────────┘
@@ -76,6 +117,12 @@ Add to your `pubspec.yaml`:
 ```yaml
 dependencies:
   agenix: ^4.0.0
+```
+
+If you need Firebase persistence, also add:
+
+```yaml
+  agenix_firebase: ^1.0.0
 ```
 
 Then run:
@@ -115,11 +162,24 @@ flutter:
 import 'package:agenix/agenix.dart';
 
 final agent = await Agent.create(
-  dataStore: DataStore.inMemory(),        // or DataStore.firestoreDataStore()
+  dataStore: DataStore.inMemory(),
   llm: LLM.geminiLLM(
     apiKey: 'YOUR_API_KEY',
     modelName: 'gemini-2.0-flash',
   ),
+  name: 'Assistant',
+  role: 'General purpose assistant for the platform.',
+);
+```
+
+For Firebase persistence:
+
+```dart
+import 'package:agenix_firebase/agenix_firebase.dart';
+
+final agent = await Agent.create(
+  dataStore: FirebaseDataStore(),
+  llm: LLM.geminiLLM(apiKey: 'YOUR_API_KEY', modelName: 'gemini-2.0-flash'),
   name: 'Assistant',
   role: 'General purpose assistant for the platform.',
 );
@@ -156,7 +216,7 @@ The `Agent` is the central class. It wires together an LLM, a DataStore, a ToolR
 
 ```dart
 final agent = await Agent.create(
-  dataStore: DataStore.firestoreDataStore(),
+  dataStore: DataStore.inMemory(),
   llm: LLM.geminiLLM(apiKey: key, modelName: 'gemini-2.0-flash'),
   name: 'Support Agent',
   role: 'Handles customer support queries for the e-commerce platform.',
@@ -244,12 +304,12 @@ The `DataStore` abstract class handles conversation persistence. Messages are sa
 
 **Built-in implementations:**
 
-| DataStore | Use Case |
-|---|---|
-| `DataStore.firestoreDataStore()` | Production apps with Firebase backend |
-| `DataStore.inMemory()` | Testing, prototyping, or non-persistent apps |
+| Package | DataStore | Use Case |
+|---|---|---|
+| `agenix` | `DataStore.inMemory()` | Testing, prototyping, or non-persistent apps |
+| `agenix_firebase` | `FirebaseDataStore()` | Production apps with Firebase backend |
 
-**Firebase setup:** Ensure `Firebase.initializeApp()` is called before creating the data store. Requires an authenticated user via `firebase_auth`.
+**Firebase setup:** Add `agenix_firebase` to your pubspec, ensure `Firebase.initializeApp()` is called before creating the data store, and sign in a user via `firebase_auth`.
 
 **Implementing a custom DataStore:**
 
@@ -388,14 +448,14 @@ final newsAgent = await Agent.create(
 );
 
 final favouritesAgent = await Agent.create(
-  dataStore: DataStore.firestoreDataStore(),
+  dataStore: DataStore.inMemory(),
   llm: llm,
   name: 'Favourites Agent',
   role: 'Manages user favourites: add, remove, and list.',
 );
 
 final orchestrator = await Agent.create(
-  dataStore: DataStore.firestoreDataStore(),
+  dataStore: DataStore.inMemory(),
   llm: llm,
   name: 'Orchestrator',
   role: 'Main user-facing agent. Delegates to News Agent and Favourites Agent.',
@@ -497,7 +557,7 @@ try {
 } on DataStoreException catch (e) {
   // Persistence operation failed
 } on NotAuthenticatedException {
-  // Firebase operation without a signed-in user
+  // Firebase operation without a signed-in user (from agenix_firebase)
 } on ConfigException catch (e) {
   // Invalid configuration (bad system_data.json, duplicate agent name, etc.)
 }
@@ -526,19 +586,20 @@ final agent = await Agent.create(
 
 ### Exported Classes
 
-| Class | Description |
-|---|---|
-| `Agent` | Core agent with LLM, memory, tools, and multi-agent orchestration |
-| `AgentScope` | Isolates groups of agents that can discover and chain to each other |
-| `LLM` | Abstract interface for language model providers |
-| `LlmConfig` | Provider-neutral generation settings (temperature, tokens, timeout, etc.) |
-| `DataStore` | Abstract interface for conversation persistence |
-| `AgentMessage` | A message in a conversation (user or agent) |
-| `Conversation` | Summary of a conversation (last message, timestamp, ID) |
-| `Tool` | Abstract class to extend for custom tools |
-| `ParameterSpecification` | Defines a tool parameter (name, type, required, default, enum) |
-| `ToolResponse` | Result returned from a tool execution |
-| `ToolRegistry` | Per-agent registry for managing available tools |
+| Class | Package | Description |
+|---|---|---|
+| `Agent` | `agenix` | Core agent with LLM, memory, tools, and multi-agent orchestration |
+| `AgentScope` | `agenix` | Isolates groups of agents that can discover and chain to each other |
+| `LLM` | `agenix` | Abstract interface for language model providers |
+| `LlmConfig` | `agenix` | Provider-neutral generation settings (temperature, tokens, timeout, etc.) |
+| `DataStore` | `agenix` | Abstract interface for conversation persistence |
+| `AgentMessage` | `agenix` | A message in a conversation (user or agent) |
+| `Conversation` | `agenix` | Summary of a conversation (last message, timestamp, ID) |
+| `Tool` | `agenix` | Abstract class to extend for custom tools |
+| `ParameterSpecification` | `agenix` | Defines a tool parameter (name, type, required, default, enum) |
+| `ToolResponse` | `agenix` | Result returned from a tool execution |
+| `ToolRegistry` | `agenix` | Per-agent registry for managing available tools |
+| `FirebaseDataStore` | `agenix_firebase` | Firestore + Storage + Auth data store implementation |
 
 ### Exported Enums
 
@@ -581,9 +642,9 @@ The simplest setup — one agent handling all user interactions.
 ```
 ┌──────────┐     ┌───────┐     ┌───────┐     ┌───────────┐
 │  Flutter  │────►│ Agent │────►│  LLM  │     │ DataStore │
-│    UI     │◄────│       │◄────│       │     │ (Firebase)│
-└──────────┘     │       │     └───────┘     └───────────┘
-                 │       │──── save/load ────►
+│    UI     │◄────│       │◄────│       │     │(InMemory/ │
+└──────────┘     │       │     └───────┘     │ Firebase) │
+                 │       │──── save/load ────►└───────────┘
                  └───────┘
 ```
 
@@ -652,7 +713,7 @@ final agent = await Agent.create(
 | Example | Description |
 |---|---|
 | [Multi-Agent System](https://github.com/ahmadexe/agenix-examples/tree/main/multi_agent_system) | Three agents (Orchestrator, News, Favourites) working together |
-| [Basic Usage](https://github.com/ahmadexe/agenix/tree/main/example) | Single agent with tools |
+| [Firebase Example](packages/agenix_firebase/example/) | Single agent with tools and Firebase persistence |
 | [Custom DataStore](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example) | Implementing your own persistence backend |
 
 ### Multi-Agent System Demo
