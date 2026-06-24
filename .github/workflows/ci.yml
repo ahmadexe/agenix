@@ -13,10 +13,9 @@ concurrency:
 jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -25,29 +24,35 @@ jobs:
           flutter-version: 3.44.3
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Activate Melos
+        run: dart pub global activate melos
 
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+      - name: Bootstrap workspace
+        run: dart pub get
 
-      - name: Analyze
-        run: flutter analyze --fatal-infos
+      - name: Verify formatting (all packages)
+        run: dart pub global run melos run format-check
 
-      - name: Run tests with coverage
-        run: flutter test --coverage
+      - name: Analyze (all packages)
+        run: dart pub global run melos run analyze
+
+      - name: Run tests with coverage (all packages)
+        run: dart pub global run melos run test:coverage
 
       - name: Install lcov
         run: sudo apt-get update && sudo apt-get install -y lcov
 
-      - name: Enforce coverage floor
+      - name: Merge + enforce coverage floor
         run: |
-          PCT=$(lcov --summary coverage/lcov.info 2>&1 \
+          FILES=$(find packages -path '*/coverage/lcov.info')
+          echo "Coverage files: $FILES"
+          ARGS=""
+          for f in $FILES; do ARGS="$ARGS -a $f"; done
+          lcov $ARGS -o merged.lcov.info
+          PCT=$(lcov --summary merged.lcov.info 2>&1 \
                 | grep -iE 'lines' | grep -oE '[0-9]+\.[0-9]+' | head -1)
           if [ -z "$PCT" ]; then
-            echo "::warning::Could not parse coverage — skipping floor check"
-            exit 0
-          fi
+            echo "::warning::Could not parse coverage — skipping floor check"; exit 0; fi
           echo "Line coverage: ${PCT}% (min 50%)"
           awk -v p="$PCT" -v m="50" 'BEGIN { exit (p+0 >= m+0) ? 0 : 1 }'
 
@@ -56,14 +61,14 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: coverage
-          path: coverage/lcov.info
+          path: merged.lcov.info
           if-no-files-found: warn
 
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v7
         with:
-          files: coverage/lcov.info
+          files: merged.lcov.info
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

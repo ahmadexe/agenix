@@ -10,3 +10,8 @@ coverage:
 comment:
   layout: "reach, diff, files"
   behavior: default
+flags:
+  agenix:
+    paths: [packages/agenix/]
+  agenix_firebase:
+    paths: [packages/agenix_firebase/]

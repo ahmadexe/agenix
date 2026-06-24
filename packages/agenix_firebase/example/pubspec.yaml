@@ -1,0 +1,30 @@
+name: basic_app
+description: "Agenix Firebase example app."
+publish_to: none
+version: 1.0.0+1
+
+resolution: workspace
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  image_picker: ^1.0.7
+  google_generative_ai: ^0.4.7
+  agenix: ^4.0.0
+  agenix_firebase: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/system_data.json

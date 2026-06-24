@@ -3,7 +3,8 @@ name: Publish to pub.dev
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'agenix-v[0-9]+.[0-9]+.[0-9]+'
+      - 'agenix_firebase-v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   guard:
@@ -15,8 +16,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -25,26 +25,41 @@ jobs:
           flutter-version: 3.44.3
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Resolve package + version from tag
+        id: pkg
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NAME="${TAG%-v*}"
+          VER="${TAG##*-v}"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "dir=packages/$NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Install deps
+        run: dart pub get
 
       - name: Verify tag matches pubspec version
+        working-directory: ${{ steps.pkg.outputs.dir }}
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
           PUB=$(grep '^version:' pubspec.yaml | awk '{print $2}')
-          echo "tag=$TAG pubspec=$PUB"
-          test "$TAG" = "$PUB" || { echo "::error::Tag v$TAG != pubspec $PUB"; exit 1; }
+          echo "tag=${{ steps.pkg.outputs.version }} pubspec=$PUB"
+          test "${{ steps.pkg.outputs.version }}" = "$PUB" \
+            || { echo "::error::tag != pubspec version"; exit 1; }
 
       - name: Publish dry-run
+        working-directory: ${{ steps.pkg.outputs.dir }}
         run: dart pub publish --dry-run
 
       - name: Enforce pana score (min 150)
+        working-directory: ${{ steps.pkg.outputs.dir }}
         run: |
           dart pub global activate pana
-          SCORE=$(dart pub global run pana --no-warning . 2>/dev/null | grep -oE 'Package scoring: [0-9]+' | grep -oE '[0-9]+')
+          SCORE=$(dart pub global run pana --no-warning . 2>/dev/null \
+                  | grep -oE 'Package scoring: [0-9]+' | grep -oE '[0-9]+')
           echo "Pana score: ${SCORE}/160"
-          if [ -z "$SCORE" ]; then echo "::error::Could not parse pana score"; exit 1; fi
-          if [ "$SCORE" -lt 150 ]; then echo "::error::Pana score $SCORE is below minimum 150"; exit 1; fi
+          if [ -z "$SCORE" ]; then echo "::error::no pana score"; exit 1; fi
+          if [ "$SCORE" -lt 150 ]; then echo "::error::pana $SCORE < 150"; exit 1; fi
 
       - name: Publish
+        working-directory: ${{ steps.pkg.outputs.dir }}
         run: dart pub publish --force

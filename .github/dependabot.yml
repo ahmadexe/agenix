@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "pub"
-    directory: "/"
+    directory: "/packages/agenix"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
@@ -9,7 +9,15 @@ updates:
     groups:
       pub-minor-patch:
         update-types: ["minor", "patch"]
-
+  - package-ecosystem: "pub"
+    directory: "/packages/agenix_firebase"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+    groups:
+      pub-minor-patch:
+        update-types: ["minor", "patch"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
