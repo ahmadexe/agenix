@@ -26,9 +26,9 @@ String _extensionForMimeType(String mimeType) {
 
 /// Creates a [FirebaseDataStore].
 ///
-  /// Accepts optional Firebase instances for dependency injection (e.g.
-  /// using `fake_cloud_firestore` / `firebase_auth_mocks` in tests).
-  /// Defaults to the standard singleton instances.
+/// Accepts optional Firebase instances for dependency injection (e.g.
+/// using `fake_cloud_firestore` / `firebase_auth_mocks` in tests).
+/// Defaults to the standard singleton instances.
 class FirebaseDataStore extends DataStore {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;

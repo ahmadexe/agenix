@@ -100,10 +100,10 @@ class ToolResponse {
 
   @override
   int get hashCode => Object.hash(
-        toolName,
-        isRequestSuccessful,
-        message,
-        data != null ? Object.hashAll(data!.entries) : null,
-        needsFurtherReasoning,
-      );
+    toolName,
+    isRequestSuccessful,
+    message,
+    data != null ? Object.hashAll(data!.entries) : null,
+    needsFurtherReasoning,
+  );
 }

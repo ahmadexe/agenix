@@ -127,13 +127,13 @@ class AgentMessage {
   /// Hash code based on all fields
   @override
   int get hashCode => Object.hash(
-        content,
-        generatedAt,
-        isFromAgent,
-        imageData != null ? Object.hashAll(imageData!) : null,
-        mimeType,
-        imageUrl,
-        data != null ? Object.hashAll(data!.entries) : null,
-        isError,
-      );
+    content,
+    generatedAt,
+    isFromAgent,
+    imageData != null ? Object.hashAll(imageData!) : null,
+    mimeType,
+    imageUrl,
+    data != null ? Object.hashAll(data!.entries) : null,
+    isError,
+  );
 }
