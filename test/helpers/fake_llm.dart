@@ -9,24 +9,24 @@ class FakeLLM extends LLM {
     this.modelIdValue = 'fake-llm',
     this.onGenerate,
     LlmConfig? config,
-  })  : _responses = List<String>.from(responses ?? const []),
-        _config = config ?? const LlmConfig();
+  }) : _responses = List<String>.from(responses ?? const []),
+       _config = config ?? const LlmConfig();
 
   FakeLLM.alwaysResponds(String text)
-      : _responses = [],
-        fallback = '{"response":"$text"}',
-        throwWhenExhausted = false,
-        modelIdValue = 'fake-llm',
-        onGenerate = null,
-        _config = const LlmConfig();
+    : _responses = [],
+      fallback = '{"response":"$text"}',
+      throwWhenExhausted = false,
+      modelIdValue = 'fake-llm',
+      onGenerate = null,
+      _config = const LlmConfig();
 
   FakeLLM.scripted(List<String> jsonStrings)
-      : _responses = List<String>.from(jsonStrings),
-        fallback = '{"response":"fake default"}',
-        throwWhenExhausted = true,
-        modelIdValue = 'fake-llm',
-        onGenerate = null,
-        _config = const LlmConfig();
+    : _responses = List<String>.from(jsonStrings),
+      fallback = '{"response":"fake default"}',
+      throwWhenExhausted = true,
+      modelIdValue = 'fake-llm',
+      onGenerate = null,
+      _config = const LlmConfig();
 
   final List<String> _responses;
   final String fallback;

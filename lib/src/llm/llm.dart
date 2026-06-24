@@ -24,11 +24,10 @@ abstract class LLM {
     required String modelName,
     LlmConfig config = const LlmConfig(),
     Object? safetySettings,
-  }) =>
-      Gemini(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-        safetySettings: safetySettings,
-      );
+  }) => Gemini(
+    apiKey: apiKey,
+    modelName: modelName,
+    config: config,
+    safetySettings: safetySettings,
+  );
 }
