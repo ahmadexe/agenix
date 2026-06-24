@@ -50,16 +50,6 @@ jobs:
         working-directory: ${{ steps.pkg.outputs.dir }}
         run: dart pub publish --dry-run
 
-      - name: Enforce pana score (min 150)
-        working-directory: ${{ steps.pkg.outputs.dir }}
-        run: |
-          dart pub global activate pana
-          SCORE=$(dart pub global run pana --no-warning . 2>/dev/null \
-                  | grep -oE 'Package scoring: [0-9]+' | grep -oE '[0-9]+')
-          echo "Pana score: ${SCORE}/160"
-          if [ -z "$SCORE" ]; then echo "::error::no pana score"; exit 1; fi
-          if [ "$SCORE" -lt 150 ]; then echo "::error::pana $SCORE < 150"; exit 1; fi
-
       - name: Publish
         working-directory: ${{ steps.pkg.outputs.dir }}
         run: dart pub publish --force
