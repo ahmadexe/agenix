@@ -1,6 +1,6 @@
 name: agenix_firebase
-description: "Firebase (Firestore + Storage + Auth) data store backend for the agenix AI agent framework."
-version: 1.0.0
+description: "Firebase (Firestore + Storage + Auth) data store backend for the agenix AI agent framework. Build Agentic AI apps with ease."
+version: 1.0.1
 homepage: https://github.com/ahmadexe/agenix
 repository: https://github.com/ahmadexe/agenix/tree/main/packages/agenix_firebase
 
@@ -20,7 +20,7 @@ keywords:
 dependencies:
   flutter:
     sdk: flutter
-  agenix: ^4.0.0
+  agenix: ^4.0.1
   firebase_core: ^4.0.0
   firebase_auth: ^6.0.0
   cloud_firestore: ^6.0.0
