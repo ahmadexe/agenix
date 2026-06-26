@@ -1,3 +1,7 @@
+## 4.0.1
+- Added demo video to README showing live multi-agent orchestration and tool-call tracing.
+- Updated package description for clarity and discoverability.
+
 ## 4.0.0
 - **BREAKING**: Removed `DataStore.firestoreDataStore()` and all Firebase dependencies from core. Firebase support is now in the separate `agenix_firebase` package.
   ```diff
