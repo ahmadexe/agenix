@@ -12,6 +12,8 @@
 
 A Flutter package for building AI agents with memory, tools, and multi-agent orchestration. Define your agent's personality, give it tools, and let it handle conversations — including delegating sub-tasks across a chain of specialized agents.
 
+<video src="https://github.com/user-attachments/assets/d92e6763-60bd-42a1-8d7c-d1e5535656bf" width="100%" controls></video>
+
 > This is the **core** package. For Firebase persistence, see [`agenix_firebase`](https://pub.dev/packages/agenix_firebase).
 
 ---
@@ -664,25 +666,6 @@ final agent = await Agent.create(
 | [Multi-Agent System](https://github.com/ahmadexe/agenix-examples/tree/main/multi_agent_system) | Three agents (Orchestrator, News, Favourites) working together |
 | [Firebase Example](https://github.com/ahmadexe/agenix/tree/main/packages/agenix_firebase/example) | Single agent with tools and Firebase persistence |
 | [Custom DataStore](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example) | Implementing your own persistence backend |
-
-### Multi-Agent System Demo
-
-In this example three agents collaborate:
-1. **Orchestrator** — communicates with the end user
-2. **News Agent** — handles News API operations
-3. **Favourites Agent** — manages user favourites (add, remove, list)
-
-https://github.com/user-attachments/assets/f79cf6ac-6913-49a7-982a-bd7b975599b7
-
-#### Workflow
-
-![Multi-Agent Workflow](https://github.com/user-attachments/assets/8ad9f4ac-018a-4092-bf8c-4fc72da81673)
-
-### Single-Agent Demo
-
-An agentic app powered by "Lens" — an AI agent with a specific personality that can answer platform questions and perform tasks using tools.
-
-https://github.com/user-attachments/assets/bcb56da8-4285-4661-af52-ee8dd6f31d08
 
 ---
 
