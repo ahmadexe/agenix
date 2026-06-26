@@ -1,0 +1,22 @@
+name: agenix_example
+description: "Live multi-agent visualization built with Agenix — watch agents and tools light up in real time."
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ^3.7.2
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  agenix:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/system_data.json
