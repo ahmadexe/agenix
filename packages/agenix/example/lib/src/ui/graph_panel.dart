@@ -11,11 +11,7 @@ import 'theme.dart';
 /// Live visualisation of the agent topology. Nodes pulse when their agent is
 /// thinking; edges glow when a delegation or tool call fires.
 class GraphPanel extends StatefulWidget {
-  const GraphPanel({
-    super.key,
-    required this.topology,
-    required this.eventLog,
-  });
+  const GraphPanel({super.key, required this.topology, required this.eventLog});
 
   final AgentTopology topology;
   final ValueNotifier<List<AgentEvent>> eventLog;
@@ -241,7 +237,9 @@ class _LegendChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8)],
+            boxShadow: [
+              BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8),
+            ],
           ),
         ),
         const SizedBox(width: 6),
@@ -330,9 +328,7 @@ class _GraphPainter extends CustomPainter {
     final positions = <String, Offset>{coord.name: coordPos};
     final rowY = size.height * 0.55;
     for (var i = 0; i < specialists.length; i++) {
-      final x =
-          size.width *
-          ((i + 1) / (specialists.length + 1));
+      final x = size.width * ((i + 1) / (specialists.length + 1));
       positions[specialists[i].name] = Offset(x, rowY);
     }
     // Tools arc below each specialist.
@@ -371,9 +367,10 @@ class _GraphPainter extends CustomPainter {
   }
 
   void _drawGrid(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = SciTheme.grid.withValues(alpha: 0.4)
-      ..strokeWidth = 0.5;
+    final paint =
+        Paint()
+          ..color = SciTheme.grid.withValues(alpha: 0.4)
+          ..strokeWidth = 0.5;
     const step = 28.0;
     for (double x = 0; x < size.width; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
@@ -384,23 +381,26 @@ class _GraphPainter extends CustomPainter {
   }
 
   void _drawEdge(Canvas canvas, Offset a, Offset b, _EdgeFx fx) {
-    final base = fx.error
-        ? SciTheme.danger
-        : (fx.pulse > 0.05 ? SciTheme.magenta : SciTheme.grid);
+    final base =
+        fx.error
+            ? SciTheme.danger
+            : (fx.pulse > 0.05 ? SciTheme.magenta : SciTheme.grid);
     final alpha = 0.25 + 0.75 * fx.pulse;
-    final paint = Paint()
-      ..color = base.withValues(alpha: alpha)
-      ..strokeWidth = 1.0 + 2.5 * fx.pulse
-      ..strokeCap = StrokeCap.round;
+    final paint =
+        Paint()
+          ..color = base.withValues(alpha: alpha)
+          ..strokeWidth = 1.0 + 2.5 * fx.pulse
+          ..strokeCap = StrokeCap.round;
     canvas.drawLine(a, b, paint);
 
     // Travelling spark while pulsing.
     if (fx.pulse > 0.05) {
       final p = ((t * 1.5) % 1.0);
       final sparkPos = Offset.lerp(a, b, p)!;
-      final spark = Paint()
-        ..color = base
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      final spark =
+          Paint()
+            ..color = base
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
       canvas.drawCircle(sparkPos, 3.5, spark);
       canvas.drawCircle(sparkPos, 1.5, Paint()..color = Colors.white);
     }
@@ -414,9 +414,10 @@ class _GraphPainter extends CustomPainter {
     bool isCoordinator = false,
   }) {
     final active = fx.activity > 0.1 || fx.pulse > 0.05;
-    final color = fx.error
-        ? SciTheme.danger
-        : active
+    final color =
+        fx.error
+            ? SciTheme.danger
+            : active
             ? SciTheme.cyan
             : (isCoordinator ? SciTheme.amber : SciTheme.lime);
 
@@ -424,18 +425,23 @@ class _GraphPainter extends CustomPainter {
 
     // Outer glow halo (scales with pulse).
     final haloR = radius + 18 + 12 * fx.pulse;
-    final halo = Paint()
-      ..shader = RadialGradient(
-        colors: [color.withValues(alpha: 0.45 * (0.4 + fx.pulse)), Colors.transparent],
-      ).createShader(Rect.fromCircle(center: pos, radius: haloR));
+    final halo =
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              color.withValues(alpha: 0.45 * (0.4 + fx.pulse)),
+              Colors.transparent,
+            ],
+          ).createShader(Rect.fromCircle(center: pos, radius: haloR));
     canvas.drawCircle(pos, haloR, halo);
 
     // Rotating ring while thinking.
     if (fx.activity > 0.1) {
-      final ringPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = color.withValues(alpha: 0.8);
+      final ringPaint =
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = color.withValues(alpha: 0.8);
       final rect = Rect.fromCircle(center: pos, radius: radius + 8);
       final sweep = math.pi * 0.8;
       final start = (t * 3) % (math.pi * 2);
@@ -446,10 +452,11 @@ class _GraphPainter extends CustomPainter {
     // Body.
     final body = Paint()..color = SciTheme.bg;
     canvas.drawCircle(pos, radius, body);
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = color;
+    final stroke =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = color;
     canvas.drawCircle(pos, radius, stroke);
 
     // Center dot.
@@ -460,18 +467,21 @@ class _GraphPainter extends CustomPainter {
 
   void _drawToolNode(Canvas canvas, Offset pos, String name, _NodeFx fx) {
     final active = fx.activity > 0.1 || fx.pulse > 0.05;
-    final color = fx.error
-        ? SciTheme.danger
-        : (active ? SciTheme.magenta : SciTheme.dim);
+    final color =
+        fx.error ? SciTheme.danger : (active ? SciTheme.magenta : SciTheme.dim);
 
     final rect = Rect.fromCenter(center: pos, width: 22, height: 22);
 
     // Glow.
     final glowR = 16 + 10 * fx.pulse;
-    final halo = Paint()
-      ..shader = RadialGradient(
-        colors: [color.withValues(alpha: 0.5 * (0.3 + fx.pulse)), Colors.transparent],
-      ).createShader(Rect.fromCircle(center: pos, radius: glowR));
+    final halo =
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              color.withValues(alpha: 0.5 * (0.3 + fx.pulse)),
+              Colors.transparent,
+            ],
+          ).createShader(Rect.fromCircle(center: pos, radius: glowR));
     canvas.drawCircle(pos, glowR, halo);
 
     canvas.save();
@@ -488,7 +498,14 @@ class _GraphPainter extends CustomPainter {
     );
     canvas.restore();
 
-    _drawLabel(canvas, pos.translate(0, 22), name, color, mono: true, small: true);
+    _drawLabel(
+      canvas,
+      pos.translate(0, 22),
+      name,
+      color,
+      mono: true,
+      small: true,
+    );
     rect.toString(); // silence unused
   }
 
@@ -519,4 +536,3 @@ class _GraphPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _GraphPainter old) => true;
 }
-

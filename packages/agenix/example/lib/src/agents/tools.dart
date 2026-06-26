@@ -172,8 +172,7 @@ class SentimentTool extends Tool {
   Future<ToolResponse> run(Map<String, dynamic> params) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     final topic = (params['topic'] ?? '').toString();
-    final score =
-        (topic.codeUnits.fold<int>(0, (a, b) => a + b) % 100) / 100.0;
+    final score = (topic.codeUnits.fold<int>(0, (a, b) => a + b) % 100) / 100.0;
     final label =
         score > 0.66
             ? 'positive'

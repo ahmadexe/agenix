@@ -120,10 +120,7 @@ class _EventLogPanelState extends State<EventLogPanel> {
               text: '  ${e.source}$target',
               style: const TextStyle(color: SciTheme.fg),
             ),
-            TextSpan(
-              text: detail,
-              style: const TextStyle(color: SciTheme.dim),
-            ),
+            TextSpan(text: detail, style: const TextStyle(color: SciTheme.dim)),
           ],
         ),
       ),

@@ -74,12 +74,13 @@ class _BootstrapState extends State<_Bootstrap> {
     }
     return Scaffold(
       body: Center(
-        child: _error == null
-            ? const CircularProgressIndicator(color: SciTheme.cyan)
-            : Text(
-                'Failed to boot: $_error',
-                style: const TextStyle(color: SciTheme.danger),
-              ),
+        child:
+            _error == null
+                ? const CircularProgressIndicator(color: SciTheme.cyan)
+                : Text(
+                  'Failed to boot: $_error',
+                  style: const TextStyle(color: SciTheme.danger),
+                ),
       ),
     );
   }

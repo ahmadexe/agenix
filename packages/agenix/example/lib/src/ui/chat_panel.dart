@@ -161,22 +161,23 @@ class _ChatPanelState extends State<ChatPanel> {
                 side: const BorderSide(color: SciTheme.cyan),
               ),
             ),
-            child: _busy
-                ? const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: SciTheme.cyan,
+            child:
+                _busy
+                    ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: SciTheme.cyan,
+                      ),
+                    )
+                    : const Text(
+                      'SEND',
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        letterSpacing: 1.4,
+                      ),
                     ),
-                  )
-                : const Text(
-                    'SEND',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      letterSpacing: 1.4,
-                    ),
-                  ),
           ),
         ],
       ),
