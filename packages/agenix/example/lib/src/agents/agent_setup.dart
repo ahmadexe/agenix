@@ -51,7 +51,7 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
 
   LLM baseLlm({double temperature = 0.4}) => LLM.geminiLLM(
     apiKey: apiKey,
-    modelName: 'gemini-flash-latest',
+    modelName: 'gemini-2.5-flash',
     config: LlmConfig(
       temperature: temperature,
       jsonMode: true,
