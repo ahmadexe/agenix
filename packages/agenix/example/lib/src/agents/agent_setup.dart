@@ -1,4 +1,5 @@
 import 'package:agenix/agenix.dart';
+import 'package:flutter/foundation.dart';
 
 import '../event_bus.dart';
 import 'instrumented_llm.dart';
@@ -72,6 +73,10 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
         'again. After the tool returns, produce a final {"response": "..."} '
         'with 3-5 bullet findings drawn from the snippets.',
     scope: scope,
+    onError: (error, stack) {
+      debugPrint(error.message);
+      debugPrint(stack.toString());
+    },
   );
   researcher.toolRegistry.registerTool(
     InstrumentedTool(inner: WebSearchTool(), ownerAgent: 'researcher'),
@@ -92,6 +97,10 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
         '{"response": "..."} that states mean, min, max, and growth percent. '
         'Do NOT call either tool more than once.',
     scope: scope,
+    onError: (error, stack) {
+      debugPrint(error.message);
+      debugPrint(stack.toString());
+    },
   );
   analyst.toolRegistry.registerTool(
     InstrumentedTool(inner: MarketDataTool(), ownerAgent: 'analyst'),
@@ -112,6 +121,10 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
         'one closing line of qualitative color from the sentiment result. '
         'Do NOT call sentiment_scan more than once.',
     scope: scope,
+    onError: (error, stack) {
+      debugPrint(error.message);
+      debugPrint(stack.toString());
+    },
   );
   writer.toolRegistry.registerTool(
     InstrumentedTool(inner: SentimentTool(), ownerAgent: 'writer'),
@@ -133,6 +146,10 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
         '[researcher, analyst, writer]. researcher gathers facts, analyst '
         'computes numbers, writer produces the final briefing.',
     scope: scope,
+    onError: (error, stack) {
+      debugPrint(error.message);
+      debugPrint(stack.toString());
+    },
   );
 
   AgentEventBus.instance.emitNow(
