@@ -17,7 +17,9 @@ void main() {
     () async {
       const apiKey = String.fromEnvironment('GEMINI_API_KEY');
       if (apiKey.isEmpty) {
-        markTestSkipped('Pass --dart-define=GEMINI_API_KEY=... to run this test');
+        markTestSkipped(
+          'Pass --dart-define=GEMINI_API_KEY=... to run this test',
+        );
         return;
       }
 
