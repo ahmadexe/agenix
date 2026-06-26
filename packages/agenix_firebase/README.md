@@ -10,6 +10,8 @@ Firebase (Firestore + Storage + Auth) data store backend for the [agenix](https:
 
 This package provides `FirebaseDataStore`, an implementation of `DataStore` that persists conversations and messages to Cloud Firestore, uploads images to Firebase Storage, and scopes data per authenticated user via Firebase Auth.
 
+<video src="https://github.com/user-attachments/assets/d92e6763-60bd-42a1-8d7c-d1e5535656bf" width="100%" controls></video>
+
 ---
 
 ## Installation
