@@ -17,7 +17,8 @@ void main() {
     () async {
       const apiKey = String.fromEnvironment('GEMINI_API_KEY');
       if (apiKey.isEmpty) {
-        fail('Pass --dart-define=GEMINI_API_KEY=...');
+        markTestSkipped('Pass --dart-define=GEMINI_API_KEY=... to run this test');
+        return;
       }
 
       final events = <AgentEvent>[];
@@ -34,7 +35,7 @@ void main() {
 
       // Raw LLM smoke test first.
       final smoke = await LLM
-          .geminiLLM(apiKey: apiKey, modelName: 'gemini-flash-latest')
+          .geminiLLM(apiKey: apiKey, modelName: 'gemini-2.5-flash')
           .generate(prompt: 'Reply with {"response": "ok"}');
       // ignore: avoid_print
       print('SMOKE: $smoke');
