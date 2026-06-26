@@ -39,11 +39,11 @@ class InstrumentedLlm implements LLM {
         detail: _peek(result),
       );
       return result;
-    } catch (_) {
+    } catch (e) {
       AgentEventBus.instance.emitNow(
         AgentEventKind.agentResponded,
         agentName,
-        detail: 'error',
+        detail: 'error: $e',
       );
       rethrow;
     }

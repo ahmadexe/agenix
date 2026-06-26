@@ -50,8 +50,12 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
 
   LLM baseLlm({double temperature = 0.4}) => LLM.geminiLLM(
     apiKey: apiKey,
-    modelName: 'gemini-2.5-flash',
-    config: LlmConfig(temperature: temperature, jsonMode: true),
+    modelName: 'gemini-flash-latest',
+    config: LlmConfig(
+      temperature: temperature,
+      jsonMode: true,
+      timeout: const Duration(seconds: 120),
+    ),
   );
 
   // --- Researcher ------------------------------------------------------------
@@ -63,8 +67,10 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
     ),
     name: 'researcher',
     role:
-        'Research specialist. Gathers factual, well-sourced information about '
-        'a topic using the web_search tool. Returns 3-5 bullet findings.',
+        'Research specialist. Call web_search EXACTLY ONCE with a single '
+        'focused query that covers the whole topic. Do NOT call web_search '
+        'again. After the tool returns, produce a final {"response": "..."} '
+        'with 3-5 bullet findings drawn from the snippets.',
     scope: scope,
   );
   researcher.toolRegistry.registerTool(
@@ -80,9 +86,11 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
     ),
     name: 'analyst',
     role:
-        'Quantitative analyst. Uses market_data to pull a time series and '
-        'statistics to compute mean/min/max/growth. Returns a short numeric '
-        'summary with the headline number callers should know.',
+        'Quantitative analyst. First call market_data ONCE for the topic. '
+        'Then call statistics ONCE, passing the "weeks" array from the '
+        'market_data result as "values". Then produce a final '
+        '{"response": "..."} that states mean, min, max, and growth percent. '
+        'Do NOT call either tool more than once.',
     scope: scope,
   );
   analyst.toolRegistry.registerTool(
@@ -98,9 +106,11 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
     llm: InstrumentedLlm(inner: baseLlm(temperature: 0.7), agentName: 'writer'),
     name: 'writer',
     role:
-        'Editorial writer. Synthesizes prior research and analysis into a '
-        'crisp 3-paragraph briefing. Uses sentiment_scan to add one line of '
-        'qualitative color at the end.',
+        'Editorial writer. Call sentiment_scan ONCE for the topic, then '
+        'produce a final {"response": "..."} containing a crisp 3-paragraph '
+        'briefing that synthesizes the upstream research and analysis, with '
+        'one closing line of qualitative color from the sentiment result. '
+        'Do NOT call sentiment_scan more than once.',
     scope: scope,
   );
   writer.toolRegistry.registerTool(
