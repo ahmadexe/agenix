@@ -1,5 +1,5 @@
 // Reproduction test — runs the demo topology end-to-end against the real
-// Gemini API and prints every event so we can pinpoint what's breaking.
+// Groq API and prints every event so we can pinpoint what's breaking.
 
 import 'dart:io';
 
@@ -15,10 +15,10 @@ void main() {
   test(
     'coordinator chain runs end-to-end',
     () async {
-      const apiKey = String.fromEnvironment('GEMINI_API_KEY');
-      if (apiKey.isEmpty) {
+      const groqApiKey = String.fromEnvironment('GROQ_API_KEY');
+      if (groqApiKey.isEmpty) {
         markTestSkipped(
-          'Pass --dart-define=GEMINI_API_KEY=... to run this test',
+          'Pass --dart-define=GROQ_API_KEY=... to run this test',
         );
         return;
       }
@@ -33,11 +33,11 @@ void main() {
         );
       });
 
-      final topology = await buildDemoTopology(apiKey: apiKey);
+      final topology = await buildDemoTopology(groqApiKey: groqApiKey);
 
       // Raw LLM smoke test first.
       final smoke = await LLM
-          .geminiLLM(apiKey: apiKey, modelName: 'gemini-2.5-flash')
+          .groqLLM(apiKey: groqApiKey, modelName: 'llama-3.3-70b-versatile')
           .generate(prompt: 'Reply with {"response": "ok"}');
       // ignore: avoid_print
       print('SMOKE: $smoke');
