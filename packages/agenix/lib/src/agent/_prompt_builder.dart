@@ -18,6 +18,7 @@ class _PromptBuilder {
 
   String buildTextPrompt({
     List<AgentMessage>? memoryMessages,
+    String? contextSummary,
     required AgentMessage userMessage,
     bool isPartOfChain = false,
     String? input,
@@ -32,6 +33,11 @@ class _PromptBuilder {
           'Agents in the System: ${agents.map((e) => e.toString()).join(", ")}',
         );
       }
+    }
+
+    // --- Rolling summary of evicted history (rendered before recent messages) ---
+    if (contextSummary != null && contextSummary.isNotEmpty) {
+      buffer.writeln('Summary of earlier conversation:\n$contextSummary\n');
     }
 
     // --- Chat history (excludes error messages) ---
