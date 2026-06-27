@@ -4,7 +4,6 @@ import 'package:agenix/src/llm/_anthropic.dart';
 import 'package:agenix/src/llm/_cohere.dart';
 import 'package:agenix/src/llm/_gemini.dart';
 import 'package:agenix/src/llm/_models_lab.dart';
-import 'package:agenix/src/llm/_ollama.dart';
 import 'package:agenix/src/llm/_openai.dart';
 import 'package:agenix/src/llm/llm_config.dart';
 
@@ -150,24 +149,6 @@ abstract class LLM {
         apiKey: apiKey,
         modelName: modelName,
         config: config,
-      );
-
-  /// Creates an Ollama-backed [LLM] instance for locally hosted models.
-  ///
-  /// [modelName] is the Ollama model tag, e.g. `llama3.2`, `mistral`,
-  /// `llava` (vision), `qwen2.5`.
-  /// [baseUrl] defaults to `http://localhost:11434`; override for remote hosts.
-  static LLM ollamaLLM({
-    required String modelName,
-    LlmConfig config = const LlmConfig(),
-    String baseUrl = 'http://localhost:11434',
-    String? apiKey,
-  }) =>
-      Ollama(
-        modelName: modelName,
-        config: config,
-        baseUrl: baseUrl,
-        apiKey: apiKey,
       );
 
   /// Creates a ModelsLab-backed [LLM] instance.
