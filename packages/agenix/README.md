@@ -80,7 +80,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  agenix: ^4.0.0
+  agenix: ^4.1.0
 ```
 
 Then run:
@@ -95,8 +95,8 @@ The core package ships with `DataStore.inMemory()` — a zero-dependency store f
 
 ```yaml
 dependencies:
-  agenix: ^4.0.0
-  agenix_firebase: ^1.0.0
+  agenix: ^4.1.0
+  agenix_firebase: ^1.0.2
 ```
 
 See [`agenix_firebase`](https://pub.dev/packages/agenix_firebase) for setup instructions.

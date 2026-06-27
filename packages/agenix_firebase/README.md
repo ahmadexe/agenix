@@ -18,8 +18,8 @@ This package provides `FirebaseDataStore`, an implementation of `DataStore` that
 
 ```yaml
 dependencies:
-  agenix: ^4.0.0
-  agenix_firebase: ^1.0.0
+  agenix: ^4.1.0
+  agenix_firebase: ^1.0.2
 ```
 
 ```bash
@@ -125,8 +125,8 @@ In agenix 3.x, Firebase was bundled in the core package. In 4.0.0, it was extrac
 ```diff
 # pubspec.yaml
   dependencies:
-    agenix: ^4.0.0
-+   agenix_firebase: ^1.0.0
+    agenix: ^4.1.0
++   agenix_firebase: ^1.0.2
 
 # Dart
 + import 'package:agenix_firebase/agenix_firebase.dart';

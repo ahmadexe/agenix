@@ -1,6 +1,6 @@
 name: agenix
 description: "A framework that lets you build AI agents in Flutter that actually use tools, remember context, and talk to each other. No backend required."
-version: 4.0.1
+version: 4.1.0
 homepage: https://github.com/ahmadexe/agenix
 repository: https://github.com/ahmadexe/agenix/tree/main/packages/agenix
 
