@@ -112,10 +112,7 @@ Future<AgentTopology> buildDemoTopology({required String groqApiKey}) async {
   // --- Writer ----------------------------------------------------------------
   final writer = await Agent.create(
     dataStore: dataStore,
-    llm: InstrumentedLlm(
-      inner: groqLlm(temperature: 0.7),
-      agentName: 'writer',
-    ),
+    llm: InstrumentedLlm(inner: groqLlm(temperature: 0.7), agentName: 'writer'),
     name: 'writer',
     role:
         'Editorial writer. Call sentiment_scan ONCE for the topic, then '

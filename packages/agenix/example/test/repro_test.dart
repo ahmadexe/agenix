@@ -17,9 +17,7 @@ void main() {
     () async {
       const groqApiKey = String.fromEnvironment('GROQ_API_KEY');
       if (groqApiKey.isEmpty) {
-        markTestSkipped(
-          'Pass --dart-define=GROQ_API_KEY=... to run this test',
-        );
+        markTestSkipped('Pass --dart-define=GROQ_API_KEY=... to run this test');
         return;
       }
 
