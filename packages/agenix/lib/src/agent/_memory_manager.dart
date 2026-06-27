@@ -10,6 +10,7 @@ class _MemoryManager {
   final int _summarizationBatchSize;
 
   // Per-conversation state (in-process memory only, never persisted).
+  final Map<String, int> _savedCount = {};
   final Map<String, int> _evictionCursor = {};
   final Map<String, List<AgentMessage>> _pendingBatch = {};
   final Map<String, String> _rollingContext = {};
@@ -27,6 +28,7 @@ class _MemoryManager {
     Object? metaData,
   }) async {
     await dataStore.saveMessage(convoId, msg, metaData: metaData);
+    _savedCount[convoId] = (_savedCount[convoId] ?? 0) + 1;
   }
 
   /// Returns the active context window and any rolling summary of evicted history.
@@ -49,14 +51,22 @@ class _MemoryManager {
       return (messages: msgs, summary: _rollingContext[convoId]);
     }
 
-    // Fetch the full history to identify newly evicted messages.
-    final all = await dataStore.getMessages(convoId, metaData: metaData);
-    final evictedZoneEnd = (all.length - limit).clamp(0, all.length);
+    final totalSaved = _savedCount[convoId] ?? 0;
+    final evictedZoneEnd = (totalSaved - limit).clamp(0, totalSaved);
     final cursor = _evictionCursor[convoId] ?? 0;
 
     if (evictedZoneEnd > cursor) {
-      final newlyEvicted = all
-          .sublist(cursor, evictedZoneEnd)
+      // Bounded fetch: covers [cursor..totalSaved) — no full-history read.
+      final fetchCount = totalSaved - cursor;
+      final fromCursor = await dataStore.getMessages(
+        convoId,
+        limit: fetchCount,
+        metaData: metaData,
+      );
+
+      final newlyEvictedCount = evictedZoneEnd - cursor;
+      final newlyEvicted = fromCursor
+          .take(newlyEvictedCount)
           .where((m) => !m.isError)
           .toList();
 
@@ -66,10 +76,17 @@ class _MemoryManager {
         (_pendingBatch[convoId] ??= []).addAll(newlyEvicted);
         await _maybeSummarize(convoId);
       }
+
+      final active = fromCursor.skip(newlyEvictedCount).toList();
+      return (messages: active, summary: _rollingContext[convoId]);
     }
 
-    final active =
-        all.length <= limit ? List.of(all) : all.sublist(all.length - limit);
+    // No new evictions: bounded active-window fetch only.
+    final active = await dataStore.getMessages(
+      convoId,
+      limit: limit,
+      metaData: metaData,
+    );
     return (messages: active, summary: _rollingContext[convoId]);
   }
 
