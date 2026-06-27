@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:agenix/src/llm/_anthropic.dart';
 import 'package:agenix/src/llm/_cohere.dart';
 import 'package:agenix/src/llm/_gemini.dart';
-import 'package:agenix/src/llm/_models_lab.dart';
 import 'package:agenix/src/llm/_openai.dart';
 import 'package:agenix/src/llm/llm_config.dart';
 
@@ -146,21 +145,6 @@ abstract class LLM {
     LlmConfig config = const LlmConfig(),
   }) =>
       Cohere(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-      );
-
-  /// Creates a ModelsLab-backed [LLM] instance.
-  ///
-  /// [modelName] is the ModelsLab `model_id`, e.g. `Qwen2-7B`, `Llama-3-8B`.
-  /// Multimodal input is not supported.
-  static LLM modelsLabLLM({
-    required String apiKey,
-    required String modelName,
-    LlmConfig config = const LlmConfig(),
-  }) =>
-      ModelsLab(
         apiKey: apiKey,
         modelName: modelName,
         config: config,
