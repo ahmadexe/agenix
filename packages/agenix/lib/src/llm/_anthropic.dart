@@ -78,18 +78,31 @@ class Anthropic extends LLM {
         causeStack: st,
       );
     } on DioException catch (e, st) {
+      final status = e.response?.statusCode;
       final body = e.response?.data;
       final detail = body is Map ? (body['error']?['message'] ?? body['message']) : null;
-      throw LlmException(
-        'Anthropic call failed: ${detail ?? e.message} (status ${e.response?.statusCode})',
-        cause: e,
-        causeStack: st,
-      );
+      final msg = 'Anthropic call failed: ${detail ?? e.message} (status $status)';
+      if (status == 429) {
+        throw LlmRateLimitException(
+          msg,
+          cause: e,
+          causeStack: st,
+          retryAfter: _parseRetryAfter(e.response?.headers),
+        );
+      }
+      throw LlmException(msg, cause: e, causeStack: st, statusCode: status);
     } on AgenixException {
       rethrow;
     } catch (e, st) {
       throw LlmException('Anthropic call failed: $e', cause: e, causeStack: st);
     }
+  }
+
+  Duration? _parseRetryAfter(Headers? headers) {
+    final value = headers?.value('retry-after');
+    if (value == null) return null;
+    final seconds = int.tryParse(value.trim());
+    return seconds != null ? Duration(seconds: seconds) : null;
   }
 
   List<Map<String, dynamic>> _buildMessages(

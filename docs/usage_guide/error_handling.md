@@ -75,6 +75,7 @@ All Agenix exceptions extend `AgenixException` (a sealed class), so you can catc
 AgenixException (sealed)
 │
 ├── LlmException
+│   ├── LlmRateLimitException
 │   └── LlmTimeoutException
 │
 ├── ResponseParseException
@@ -95,7 +96,8 @@ AgenixException (sealed)
 
 | Exception | When It Happens | Common Cause |
 |-----------|----------------|--------------|
-| `LlmException` | LLM call fails | Invalid API key, rate limit, network error |
+| `LlmException` | LLM call fails | Invalid API key, network error, server error |
+| `LlmRateLimitException` | Provider returned HTTP 429 | Too many requests; check `retryAfter` for suggested wait |
 | `LlmTimeoutException` | LLM doesn't respond in time | Slow network, overloaded model |
 | `ResponseParseException` | LLM response isn't valid JSON | Model returned malformed output (rare — Agenix retries up to 2 times) |
 | `ToolNotFoundException` | LLM requested a tool that isn't registered | Typo in tool name, tool was unregistered |
@@ -133,6 +135,11 @@ This fires regardless of the failure mode. Even with `gracefulMessage`, you can 
 
 ### Retry with Exponential Backoff
 
+`LlmRateLimitException` carries structured fields so your retry logic doesn't have to parse strings:
+
+- `statusCode` — always `429` for rate-limit errors.
+- `retryAfter` — a `Duration` parsed from the provider's `Retry-After` header, or `null` if the header was absent.
+
 ```dart
 Future<AgentMessage> askWithRetry(
   Agent agent,
@@ -141,25 +148,23 @@ Future<AgentMessage> askWithRetry(
   int maxRetries = 3,
 }) async {
   for (var attempt = 0; attempt < maxRetries; attempt++) {
-    final response = await agent.generateResponse(
-      convoId: convoId,
-      userMessage: message,
-    );
+    try {
+      return await agent.generateResponse(
+        convoId: convoId,
+        userMessage: message,
+        // Use throwError so rate-limit exceptions propagate.
+      );
+    } on LlmRateLimitException catch (e) {
+      if (attempt == maxRetries - 1) rethrow;
 
-    if (!response.isError) return response;
-
-    // Wait before retrying (exponential backoff)
-    if (attempt < maxRetries - 1) {
-      await Future.delayed(Duration(seconds: 1 << attempt)); // 1s, 2s, 4s
+      // Honour the provider's Retry-After if present; otherwise back off exponentially.
+      final wait = e.retryAfter ?? Duration(seconds: 1 << attempt); // 1s, 2s, 4s
+      await Future.delayed(wait);
     }
   }
 
-  return AgentMessage(
-    content: 'Sorry, I am unable to respond right now. Please try again later.',
-    generatedAt: DateTime.now(),
-    isFromAgent: true,
-    isError: true,
-  );
+  // Unreachable, but satisfies the return type.
+  throw StateError('askWithRetry: exceeded $maxRetries attempts');
 }
 ```
 

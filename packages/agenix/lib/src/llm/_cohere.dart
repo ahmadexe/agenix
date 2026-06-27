@@ -83,16 +83,29 @@ class Cohere extends LLM {
         causeStack: st,
       );
     } on DioException catch (e, st) {
-      throw LlmException(
-        'Cohere call failed: ${e.message} (status ${e.response?.statusCode})',
-        cause: e,
-        causeStack: st,
-      );
+      final status = e.response?.statusCode;
+      final msg = 'Cohere call failed: ${e.message} (status $status)';
+      if (status == 429) {
+        throw LlmRateLimitException(
+          msg,
+          cause: e,
+          causeStack: st,
+          retryAfter: _parseRetryAfter(e.response?.headers),
+        );
+      }
+      throw LlmException(msg, cause: e, causeStack: st, statusCode: status);
     } on AgenixException {
       rethrow;
     } catch (e, st) {
       throw LlmException('Cohere call failed: $e', cause: e, causeStack: st);
     }
+  }
+
+  Duration? _parseRetryAfter(Headers? headers) {
+    final value = headers?.value('retry-after');
+    if (value == null) return null;
+    final seconds = int.tryParse(value.trim());
+    return seconds != null ? Duration(seconds: seconds) : null;
   }
 
   String _extractText(dynamic data) {
