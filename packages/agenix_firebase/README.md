@@ -18,13 +18,17 @@ This package provides `FirebaseDataStore`, an implementation of `DataStore` that
 
 ```yaml
 dependencies:
-  agenix: ^4.1.0
-  agenix_firebase: ^1.0.2
+  agenix: ^4.1.1
+  agenix_firebase: ^1.0.3
 ```
 
 ```bash
 flutter pub get
 ```
+
+### Supported LLM providers
+
+`agenix` (the core package) ships built-in adapters for **Google Gemini**, **OpenAI**, **Anthropic (Claude)**, **Groq**, **Mistral AI**, **DeepSeek**, **xAI (Grok)**, and **Cohere**. Pass any of them as the `llm` argument to `Agent.create()` — this package only handles persistence and is provider-agnostic.
 
 ---
 
@@ -125,8 +129,8 @@ In agenix 3.x, Firebase was bundled in the core package. In 4.0.0, it was extrac
 ```diff
 # pubspec.yaml
   dependencies:
-    agenix: ^4.1.0
-+   agenix_firebase: ^1.0.2
+    agenix: ^4.1.1
++   agenix_firebase: ^1.0.3
 
 # Dart
 + import 'package:agenix_firebase/agenix_firebase.dart';

@@ -1,3 +1,6 @@
+## 1.0.3
+- Bumped `agenix` dependency to `^4.1.1`.
+
 ## 1.0.2
 - Bumped `agenix` dependency to `^4.1.0`.
 

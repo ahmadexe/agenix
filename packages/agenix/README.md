@@ -50,8 +50,9 @@ A Flutter package for building AI agents with memory, tools, and multi-agent orc
 │       ▼                                                     │
 │   ┌─────────┐    generateResponse()    ┌───────────────┐    │
 │   │  Agent   │ ◄─────────────────────► │   LLM         │    │
-│   │         │                          │  (Gemini /     │    │
-│   │         │                          │   Custom)      │    │
+│   │         │                          │  (Gemini/OpenAI│    │
+│   │         │                          │  Groq/Anthropic│    │
+│   │         │                          │  + Custom)     │    │
 │   └────┬────┘                          └───────────────┘    │
 │        │                                                     │
 │   ┌────┴──────────────────────────┐                         │
@@ -80,7 +81,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  agenix: ^4.1.0
+  agenix: ^4.1.1
 ```
 
 Then run:
@@ -95,8 +96,8 @@ The core package ships with `DataStore.inMemory()` — a zero-dependency store f
 
 ```yaml
 dependencies:
-  agenix: ^4.1.0
-  agenix_firebase: ^1.0.2
+  agenix: ^4.1.1
+  agenix_firebase: ^1.0.3
 ```
 
 See [`agenix_firebase`](https://pub.dev/packages/agenix_firebase) for setup instructions.
@@ -207,25 +208,55 @@ final agent = await Agent.create(
 
 ### LLM
 
-The `LLM` abstract class defines the contract for language model providers. Agenix ships with Gemini; implement the interface for other providers.
+The `LLM` abstract class defines the contract for language model providers. Agenix ships with built-in adapters for the most popular providers — pick one or implement your own.
+
+| Factory | Provider | Example model |
+|---|---|---|
+| `LLM.geminiLLM()` | Google Gemini | `gemini-2.0-flash` |
+| `LLM.openAiLLM()` | OpenAI | `gpt-4o` |
+| `LLM.anthropicLLM()` | Anthropic (Claude) | `claude-sonnet-4-5` |
+| `LLM.groqLLM()` | Groq | `llama-3.3-70b-versatile` |
+| `LLM.mistralLLM()` | Mistral AI | `mistral-large-latest` |
+| `LLM.deepseekLLM()` | DeepSeek | `deepseek-chat` |
+| `LLM.grokLLM()` | xAI (Grok) | `grok-4` |
+| `LLM.cohereLLM()` | Cohere | `command-r-plus-08-2024` |
 
 ```dart
-// Built-in Gemini
+// Google Gemini
 final llm = LLM.geminiLLM(
   apiKey: 'YOUR_API_KEY',
   modelName: 'gemini-2.0-flash',
   config: LlmConfig(
-    temperature: 0.2,       // Low for structured JSON output
+    temperature: 0.2,
     maxOutputTokens: 2048,
-    topP: 0.95,
-    topK: 40,
-    jsonMode: true,         // Request native JSON output mode
+    jsonMode: true,
     timeout: Duration(seconds: 60),
   ),
 );
+
+// OpenAI
+final llm = LLM.openAiLLM(apiKey: 'YOUR_API_KEY', modelName: 'gpt-4o');
+
+// Anthropic (Claude)
+final llm = LLM.anthropicLLM(apiKey: 'YOUR_API_KEY', modelName: 'claude-sonnet-4-5');
+
+// Groq — fast inference, free tier available
+final llm = LLM.groqLLM(apiKey: 'YOUR_API_KEY', modelName: 'llama-3.3-70b-versatile');
+
+// Mistral
+final llm = LLM.mistralLLM(apiKey: 'YOUR_API_KEY', modelName: 'mistral-large-latest');
+
+// DeepSeek
+final llm = LLM.deepseekLLM(apiKey: 'YOUR_API_KEY', modelName: 'deepseek-chat');
+
+// xAI (Grok)
+final llm = LLM.grokLLM(apiKey: 'YOUR_API_KEY', modelName: 'grok-4');
+
+// Cohere
+final llm = LLM.cohereLLM(apiKey: 'YOUR_API_KEY', modelName: 'command-r-plus-08-2024');
 ```
 
-**Implementing a custom LLM:**
+**Implementing a custom LLM** (e.g. your own backend):
 
 ```dart
 class MyCustomLLM implements LLM {
