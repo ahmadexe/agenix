@@ -1,6 +1,6 @@
 name: agenix
 description: "Flutter framework for multi-agent AI orchestration. Build agents that use tools, chain tasks, and talk to each other. Works with any LLM provider & no backend is needed."
-version: 4.1.0
+version: 4.1.1
 homepage: https://github.com/ahmadexe/agenix
 repository: https://github.com/ahmadexe/agenix/tree/main/packages/agenix
 

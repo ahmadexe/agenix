@@ -1,3 +1,6 @@
+## 4.1.1
+- Updated documentation to list all built-in LLM providers (Gemini, OpenAI, Anthropic, Groq, DeepSeek, Cohere, xAI) and clarify the custom LLM extension point.
+
 ## 4.1.0
 - **Multi-provider LLM support** — built-in implementations for OpenAI, Anthropic, Cohere, Groq, DeepSeek, Mistral, and xAI (Grok) alongside the existing Gemini adapter. All OpenAI-compatible providers share a single adapter with a configurable `baseUrl`.
 - **`LlmRateLimitException`** — new typed exception (extends `LlmException`) thrown on HTTP 429 responses. Carries `retryAfter: Duration?` parsed from the `Retry-After` header and `statusCode: int` (defaults to 429).
