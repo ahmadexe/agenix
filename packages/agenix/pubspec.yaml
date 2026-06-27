@@ -1,5 +1,5 @@
 name: agenix
-description: "A framework that lets you build AI agents in Flutter that actually use tools, remember context, and talk to each other. No backend required."
+description: "Flutter framework for multi-agent AI orchestration. Build agents that use tools, chain tasks, and talk to each other. Works with any LLM provider & no backend is needed."
 version: 4.1.0
 homepage: https://github.com/ahmadexe/agenix
 repository: https://github.com/ahmadexe/agenix/tree/main/packages/agenix
@@ -18,6 +18,10 @@ keywords:
   - tools
   - llm
   - agentic
+  - multi-agent
+  - orchestration
+  - agentic-ai
+  - agentic-apps
 
 dependencies:
   flutter:

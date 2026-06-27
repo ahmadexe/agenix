@@ -17,6 +17,10 @@ keywords:
   - firebase
   - firestore
   - agentic
+  - multi-agent
+  - orchestration
+  - agentic-ai
+  - agentic-apps
 
 dependencies:
   flutter:
