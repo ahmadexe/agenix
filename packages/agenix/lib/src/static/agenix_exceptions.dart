@@ -19,8 +19,37 @@ sealed class AgenixException implements Exception {
 
 /// Thrown when the LLM call fails (network error, blocked response, empty output).
 class LlmException extends AgenixException {
+  /// HTTP status code returned by the provider, if the failure was an HTTP error.
+  final int? statusCode;
+
+  /// How long to wait before retrying, parsed from the provider's `Retry-After`
+  /// header. `null` when the header was absent or unparseable.
+  final Duration? retryAfter;
+
   /// Creates an [LlmException].
-  const LlmException(super.message, {super.cause, super.causeStack});
+  const LlmException(
+    super.message, {
+    super.cause,
+    super.causeStack,
+    this.statusCode,
+    this.retryAfter,
+  });
+}
+
+/// Thrown when a provider responds with HTTP 429 (Too Many Requests).
+///
+/// Check [retryAfter] for the provider-suggested wait duration before retrying.
+/// When the provider omits the `Retry-After` header, [retryAfter] is `null` and
+/// the caller should apply its own backoff strategy.
+class LlmRateLimitException extends LlmException {
+  /// Creates an [LlmRateLimitException].
+  const LlmRateLimitException(
+    super.message, {
+    super.cause,
+    super.causeStack,
+    super.statusCode = 429,
+    super.retryAfter,
+  });
 }
 
 /// Thrown when an LLM request exceeds the configured timeout.

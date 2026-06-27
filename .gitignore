@@ -35,3 +35,7 @@ replacements.txt
 
 # Coverage
 coverage/
+
+# API Keys — never ship these
+api_keys.env
+*.env

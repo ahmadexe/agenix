@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:agenix/agenix.dart';
+import 'package:flutter/foundation.dart';
 
 import '../event_bus.dart';
 
@@ -26,6 +25,7 @@ class InstrumentedLlm implements LLM {
     String mimeType = 'image/jpeg',
   }) async {
     AgentEventBus.instance.emitNow(AgentEventKind.agentThinking, agentName);
+    debugPrint('🤖 [$agentName] → ${inner.modelId}');
     try {
       final result = await inner.generate(
         prompt: prompt,

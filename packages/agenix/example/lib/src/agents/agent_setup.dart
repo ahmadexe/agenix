@@ -45,17 +45,17 @@ class AgentNodeSpec {
 /// Builds the demo's coordinator + 3 specialists, each with their own tools.
 /// All agents live in a dedicated [AgentScope] so we don't collide with any
 /// other agent the host app might create.
-Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
+Future<AgentTopology> buildDemoTopology({required String groqApiKey}) async {
   final scope = AgentScope();
   final dataStore = DataStore.inMemory();
 
-  LLM baseLlm({double temperature = 0.4}) => LLM.geminiLLM(
-    apiKey: apiKey,
-    modelName: 'gemini-2.5-flash',
+  LLM groqLlm({double temperature = 0.4}) => LLM.groqLLM(
+    apiKey: groqApiKey,
+    modelName: 'llama-3.3-70b-versatile',
     config: LlmConfig(
       temperature: temperature,
       jsonMode: true,
-      timeout: const Duration(seconds: 120),
+      timeout: const Duration(seconds: 60),
     ),
   );
 
@@ -63,7 +63,7 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
   final researcher = await Agent.create(
     dataStore: dataStore,
     llm: InstrumentedLlm(
-      inner: baseLlm(temperature: 0.2),
+      inner: groqLlm(temperature: 0.2),
       agentName: 'researcher',
     ),
     name: 'researcher',
@@ -86,7 +86,7 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
   final analyst = await Agent.create(
     dataStore: dataStore,
     llm: InstrumentedLlm(
-      inner: baseLlm(temperature: 0.1),
+      inner: groqLlm(temperature: 0.1),
       agentName: 'analyst',
     ),
     name: 'analyst',
@@ -112,7 +112,7 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
   // --- Writer ----------------------------------------------------------------
   final writer = await Agent.create(
     dataStore: dataStore,
-    llm: InstrumentedLlm(inner: baseLlm(temperature: 0.7), agentName: 'writer'),
+    llm: InstrumentedLlm(inner: groqLlm(temperature: 0.7), agentName: 'writer'),
     name: 'writer',
     role:
         'Editorial writer. Call sentiment_scan ONCE for the topic, then '
@@ -135,7 +135,7 @@ Future<AgentTopology> buildDemoTopology({required String apiKey}) async {
   final coordinator = await Agent.create(
     dataStore: dataStore,
     llm: InstrumentedLlm(
-      inner: baseLlm(temperature: 0.3),
+      inner: groqLlm(temperature: 0.3),
       agentName: 'coordinator',
     ),
     name: 'coordinator',

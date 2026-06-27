@@ -33,20 +33,20 @@ class _BootstrapState extends State<_Bootstrap> {
   AgentTopology? _topology;
   String? _error;
 
-  static const _envKey = String.fromEnvironment('GEMINI_API_KEY');
+  static const _groqKey = String.fromEnvironment('GROQ_API_KEY');
 
   @override
   void initState() {
     super.initState();
-    if (_envKey.isNotEmpty) {
-      _apiKey = _envKey;
+    if (_groqKey.isNotEmpty) {
+      _apiKey = _groqKey;
       _boot();
     }
   }
 
   Future<void> _boot() async {
     try {
-      final t = await buildDemoTopology(apiKey: _apiKey!);
+      final t = await buildDemoTopology(groqApiKey: _apiKey!);
       if (!mounted) return;
       setState(() => _topology = t);
     } catch (e) {
@@ -172,7 +172,7 @@ class _ApiKeyGateState extends State<_ApiKeyGate> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Paste a Gemini API key to boot the demo. '
+                  'Paste a Groq API key to boot the demo. '
                   'It stays in memory for this session only.',
                   style: TextStyle(
                     color: SciTheme.dim,
@@ -190,7 +190,7 @@ class _ApiKeyGateState extends State<_ApiKeyGate> {
                     fontFamily: 'monospace',
                   ),
                   decoration: InputDecoration(
-                    hintText: 'AIza…',
+                    hintText: 'gsk_…',
                     hintStyle: const TextStyle(color: SciTheme.dim),
                     enabledBorder: OutlineInputBorder(
                       borderSide: const BorderSide(color: SciTheme.grid),
@@ -232,7 +232,7 @@ class _ApiKeyGateState extends State<_ApiKeyGate> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Tip: build with --dart-define=GEMINI_API_KEY=… to skip this screen.',
+                  'Tip: build with --dart-define=GROQ_API_KEY=… to skip this screen.',
                   style: TextStyle(
                     color: SciTheme.dim,
                     fontFamily: 'monospace',

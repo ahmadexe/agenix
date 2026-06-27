@@ -69,13 +69,24 @@ class Agent {
     void Function(AgenixException error, StackTrace stack)? onError,
     AgentScope? scope,
     RegistrationPolicy registrationPolicy = RegistrationPolicy.throwIfExists,
+
+    /// How many evicted messages to accumulate before the LLM summarizes them
+    /// into a rolling context that is prepended to every future prompt.
+    ///
+    /// Set to 0 (the default) to disable summarization — evicted messages are
+    /// simply dropped when they fall outside [memoryLimit].
+    int summarizationBatchSize = 0,
   }) async {
     final resolvedScope = scope ?? AgentScope.global;
     final systemData = await _loadSystemData(pathToSystemData);
     final registry = ToolRegistry();
     final agent = Agent._internal(
       llm: llm,
-      memoryManager: _MemoryManager(dataStore: dataStore),
+      memoryManager: _MemoryManager(
+        dataStore: dataStore,
+        llm: llm,
+        summarizationBatchSize: summarizationBatchSize,
+      ),
       promptBuilder: _PromptBuilder(
         systemPrompt: systemData,
         registry: registry,
@@ -180,14 +191,15 @@ class Agent {
     Set<String>? chainVisited,
     int chainDepth = 0,
   }) async {
-    final memoryMessages = await _memoryManager.getContext(
+    final (:messages, :summary) = await _memoryManager.getContext(
       convoId,
       limit: memoryLimit,
       metaData: metaData,
     );
 
     final prompt = _promptBuilder.buildTextPrompt(
-      memoryMessages: memoryMessages,
+      memoryMessages: messages,
+      contextSummary: summary,
       userMessage: userMessage,
       isPartOfChain: isPartOfChain,
       input: input,
