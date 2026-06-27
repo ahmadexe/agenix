@@ -17,7 +17,11 @@ void main() {
 
     setUp(() {
       dio = _MockDio();
-      llm = Cohere(apiKey: 'k', modelName: 'command-r-plus-08-2024', client: dio);
+      llm = Cohere(
+        apiKey: 'k',
+        modelName: 'command-r-plus-08-2024',
+        client: dio,
+      );
     });
 
     test('extracts message.content[0].text', () async {
@@ -28,7 +32,9 @@ void main() {
           data: {
             'message': {
               'role': 'assistant',
-              'content': [{'type': 'text', 'text': '  hi  '}],
+              'content': [
+                {'type': 'text', 'text': '  hi  '},
+              ],
             },
             'finish_reason': 'COMPLETE',
           },

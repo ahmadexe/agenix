@@ -31,7 +31,7 @@ void main() {
           statusCode: 200,
           data: {
             'content': [
-              {'type': 'text', 'text': '  hello  '}
+              {'type': 'text', 'text': '  hello  '},
             ],
           },
         ),
@@ -52,10 +52,7 @@ void main() {
         ),
       );
 
-      expect(
-        () => llm.generate(prompt: 'hi'),
-        throwsA(isA<LlmException>()),
-      );
+      expect(() => llm.generate(prompt: 'hi'), throwsA(isA<LlmException>()));
     });
 
     test('throws LlmException on empty content', () async {
@@ -67,10 +64,7 @@ void main() {
         ),
       );
 
-      expect(
-        () => llm.generate(prompt: 'hi'),
-        throwsA(isA<LlmException>()),
-      );
+      expect(() => llm.generate(prompt: 'hi'), throwsA(isA<LlmException>()));
     });
   });
 }

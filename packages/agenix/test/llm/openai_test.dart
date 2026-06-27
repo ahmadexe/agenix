@@ -25,7 +25,10 @@ void main() {
           statusCode: 200,
           data: {
             'choices': [
-              {'message': {'content': '  hi  '}, 'finish_reason': 'stop'}
+              {
+                'message': {'content': '  hi  '},
+                'finish_reason': 'stop',
+              },
             ],
           },
         ),
@@ -38,7 +41,13 @@ void main() {
         (_) async => Response(
           requestOptions: RequestOptions(path: '/chat/completions'),
           statusCode: 200,
-          data: {'choices': [{'message': {'content': ''}}]},
+          data: {
+            'choices': [
+              {
+                'message': {'content': ''},
+              },
+            ],
+          },
         ),
       );
       expect(() => llm.generate(prompt: 'x'), throwsA(isA<LlmException>()));

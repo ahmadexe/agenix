@@ -20,19 +20,22 @@ class Cohere extends LLM {
     required String modelName,
     LlmConfig config = const LlmConfig(),
     Dio? client,
-  })  : _modelName = modelName,
-        _config = config,
-        _client = client ??
-            Dio(BaseOptions(
-              baseUrl: 'https://api.cohere.com/v2',
-              connectTimeout: config.timeout,
-              receiveTimeout: config.timeout,
-              sendTimeout: config.timeout,
-              headers: {
-                'Authorization': 'Bearer $apiKey',
-                'Content-Type': 'application/json',
-              },
-            ));
+  }) : _modelName = modelName,
+       _config = config,
+       _client =
+           client ??
+           Dio(
+             BaseOptions(
+               baseUrl: 'https://api.cohere.com/v2',
+               connectTimeout: config.timeout,
+               receiveTimeout: config.timeout,
+               sendTimeout: config.timeout,
+               headers: {
+                 'Authorization': 'Bearer $apiKey',
+                 'Content-Type': 'application/json',
+               },
+             ),
+           );
 
   @override
   String get modelId => _modelName;
@@ -65,7 +68,8 @@ class Cohere extends LLM {
         'messages': messages,
         if (_config.temperature != null) 'temperature': _config.temperature,
         if (_config.topP != null) 'p': _config.topP,
-        if (_config.maxOutputTokens != null) 'max_tokens': _config.maxOutputTokens,
+        if (_config.maxOutputTokens != null)
+          'max_tokens': _config.maxOutputTokens,
         if (_config.stopSequences != null && _config.stopSequences!.isNotEmpty)
           'stop_sequences': _config.stopSequences,
         if (_config.jsonMode) 'response_format': {'type': 'json_object'},

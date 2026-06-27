@@ -12,11 +12,18 @@ class _SpyDataStore implements DataStore {
   final List<int?> getMessagesLimitCalls = [];
 
   @override
-  Future<void> saveMessage(String convoId, AgentMessage msg, {Object? metaData}) =>
-      _inner.saveMessage(convoId, msg, metaData: metaData);
+  Future<void> saveMessage(
+    String convoId,
+    AgentMessage msg, {
+    Object? metaData,
+  }) => _inner.saveMessage(convoId, msg, metaData: metaData);
 
   @override
-  Future<List<AgentMessage>> getMessages(String convoId, {int? limit, Object? metaData}) {
+  Future<List<AgentMessage>> getMessages(
+    String convoId, {
+    int? limit,
+    Object? metaData,
+  }) {
     getMessagesLimitCalls.add(limit);
     return _inner.getMessages(convoId, limit: limit, metaData: metaData);
   }
@@ -63,16 +70,16 @@ class _FakeLlm implements LLM {
 // ---------------------------------------------------------------------------
 
 AgentMessage _userMsg(String content) => AgentMessage(
-      content: content,
-      generatedAt: DateTime.now(),
-      isFromAgent: false,
-    );
+  content: content,
+  generatedAt: DateTime.now(),
+  isFromAgent: false,
+);
 
 AgentMessage _agentMsg(String content) => AgentMessage(
-      content: content,
-      generatedAt: DateTime.now(),
-      isFromAgent: true,
-    );
+  content: content,
+  generatedAt: DateTime.now(),
+  isFromAgent: true,
+);
 
 /// Seeds [store] with alternating user/agent messages for [convoId].
 Future<void> _seedMessages(
@@ -141,7 +148,8 @@ void main() {
       final store = DataStore.inMemory();
       final summarizationCalls = <String>[];
       final llm = _FakeLlm((prompt) {
-        if (prompt.contains('Summarize') || prompt.contains('existing summary')) {
+        if (prompt.contains('Summarize') ||
+            prompt.contains('existing summary')) {
           summarizationCalls.add(prompt);
           return 'ROLLING_SUMMARY';
         }
@@ -149,7 +157,16 @@ void main() {
       });
 
       // 8 messages saved, limit=4 → 4 evicted = exactly the batch threshold.
-      await _seedMessages(store, 'c1', ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']);
+      await _seedMessages(store, 'c1', [
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+        'f',
+        'g',
+        'h',
+      ]);
 
       final all = await store.getMessages('c1');
       const limit = 4;
@@ -224,7 +241,8 @@ void main() {
       const fakeHistory = 'User: hello\nChatbot: world';
 
       // A prompt that has both should have summary before history.
-      final mockPrompt = 'Summary of earlier conversation:\n$fakeSummary\n\n'
+      final mockPrompt =
+          'Summary of earlier conversation:\n$fakeSummary\n\n'
           'Chat History:\n$fakeHistory';
       final summaryIdx = mockPrompt.indexOf('Summary of earlier');
       final historyIdx = mockPrompt.indexOf('Chat History:');
@@ -238,64 +256,73 @@ void main() {
   });
 
   group('_MemoryManager — bounded reads (no full-history fetch)', () {
-    test('getMessages is always called with a bounded limit even after 500+ messages', () async {
-      final spy = _SpyDataStore();
-      // Seed 500 messages directly into the spy store.
-      for (var i = 0; i < 500; i++) {
-        await spy.saveMessage(
-          'c',
-          AgentMessage(
-            content: 'msg $i',
-            generatedAt: DateTime.now(),
-            isFromAgent: i.isOdd,
-          ),
+    test(
+      'getMessages is always called with a bounded limit even after 500+ messages',
+      () async {
+        final spy = _SpyDataStore();
+        // Seed 500 messages directly into the spy store.
+        for (var i = 0; i < 500; i++) {
+          await spy.saveMessage(
+            'c',
+            AgentMessage(
+              content: 'msg $i',
+              generatedAt: DateTime.now(),
+              isFromAgent: i.isOdd,
+            ),
+          );
+        }
+
+        // Clear spy log — we only care about reads during getContext.
+        spy.getMessagesLimitCalls.clear();
+
+        // Simulate what _MemoryManager.getContext does with the counter approach.
+        // With _savedCount = 500, limit = 10, batchSize = 20:
+        //   evictedZoneEnd = 500 - 10 = 490
+        //   cursor starts at 0 → evictedZoneEnd > cursor
+        //   fetchCount = 500 - 0 = 500 (bounded by counter, not a null-limit call)
+        //
+        // We verify via the spy that no null-limit call was made.
+        final msgs = await spy.getMessages('c', limit: 500);
+        expect(
+          spy.getMessagesLimitCalls,
+          everyElement(isNotNull),
+          reason: 'Every getMessages call must have a non-null limit',
         );
-      }
 
-      // Clear spy log — we only care about reads during getContext.
-      spy.getMessagesLimitCalls.clear();
+        // Also verify the spy correctly returned 500 messages.
+        expect(msgs, hasLength(500));
+      },
+    );
 
-      // Simulate what _MemoryManager.getContext does with the counter approach.
-      // With _savedCount = 500, limit = 10, batchSize = 20:
-      //   evictedZoneEnd = 500 - 10 = 490
-      //   cursor starts at 0 → evictedZoneEnd > cursor
-      //   fetchCount = 500 - 0 = 500 (bounded by counter, not a null-limit call)
-      //
-      // We verify via the spy that no null-limit call was made.
-      final msgs = await spy.getMessages('c', limit: 500);
-      expect(spy.getMessagesLimitCalls, everyElement(isNotNull),
-          reason: 'Every getMessages call must have a non-null limit');
+    test(
+      'getContext with summarization never issues a null-limit getMessages',
+      () async {
+        final spy = _SpyDataStore();
 
-      // Also verify the spy correctly returned 500 messages.
-      expect(msgs, hasLength(500));
-    });
+        // Save 30 messages through the spy.
+        for (var i = 0; i < 30; i++) {
+          await spy.saveMessage(
+            'c',
+            AgentMessage(
+              content: 'x$i',
+              generatedAt: DateTime.now(),
+              isFromAgent: i.isOdd,
+            ),
+          );
+        }
 
-    test('getContext with summarization never issues a null-limit getMessages', () async {
-      final spy = _SpyDataStore();
+        spy.getMessagesLimitCalls.clear();
 
-      // Save 30 messages through the spy.
-      for (var i = 0; i < 30; i++) {
-        await spy.saveMessage(
-          'c',
-          AgentMessage(
-            content: 'x$i',
-            generatedAt: DateTime.now(),
-            isFromAgent: i.isOdd,
-          ),
+        // Issue two bounded reads (simulating what getContext would do).
+        await spy.getMessages('c', limit: 25); // fetchCount-style bounded call
+        await spy.getMessages('c', limit: 10); // active-window call
+
+        expect(
+          spy.getMessagesLimitCalls,
+          everyElement(isNotNull),
+          reason: 'No unbounded (null limit) reads should occur',
         );
-      }
-
-      spy.getMessagesLimitCalls.clear();
-
-      // Issue two bounded reads (simulating what getContext would do).
-      await spy.getMessages('c', limit: 25); // fetchCount-style bounded call
-      await spy.getMessages('c', limit: 10); // active-window call
-
-      expect(
-        spy.getMessagesLimitCalls,
-        everyElement(isNotNull),
-        reason: 'No unbounded (null limit) reads should occur',
-      );
-    });
+      },
+    );
   });
 }

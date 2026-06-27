@@ -69,6 +69,7 @@ class Agent {
     void Function(AgenixException error, StackTrace stack)? onError,
     AgentScope? scope,
     RegistrationPolicy registrationPolicy = RegistrationPolicy.throwIfExists,
+
     /// How many evicted messages to accumulate before the LLM summarizes them
     /// into a rolling context that is prepended to every future prompt.
     ///

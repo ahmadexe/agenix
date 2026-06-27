@@ -27,20 +27,23 @@ class OpenAI extends LLM {
     String baseUrl = 'https://api.openai.com/v1',
     Map<String, String> extraHeaders = const {},
     Dio? client,
-  })  : _modelName = modelName,
-        _config = config,
-        _client = client ??
-            Dio(BaseOptions(
-              baseUrl: baseUrl,
-              connectTimeout: config.timeout,
-              receiveTimeout: config.timeout,
-              sendTimeout: config.timeout,
-              headers: {
-                'Authorization': 'Bearer $apiKey',
-                'Content-Type': 'application/json',
-                ...extraHeaders,
-              },
-            ));
+  }) : _modelName = modelName,
+       _config = config,
+       _client =
+           client ??
+           Dio(
+             BaseOptions(
+               baseUrl: baseUrl,
+               connectTimeout: config.timeout,
+               receiveTimeout: config.timeout,
+               sendTimeout: config.timeout,
+               headers: {
+                 'Authorization': 'Bearer $apiKey',
+                 'Content-Type': 'application/json',
+                 ...extraHeaders,
+               },
+             ),
+           );
 
   @override
   String get modelId => _modelName;
@@ -56,14 +59,20 @@ class OpenAI extends LLM {
     String mimeType = 'image/jpeg',
   }) async {
     try {
-      final messages = _buildMessages(prompt, systemInstruction, rawData, mimeType);
+      final messages = _buildMessages(
+        prompt,
+        systemInstruction,
+        rawData,
+        mimeType,
+      );
 
       final body = <String, dynamic>{
         'model': _modelName,
         'messages': messages,
         if (_config.temperature != null) 'temperature': _config.temperature,
         if (_config.topP != null) 'top_p': _config.topP,
-        if (_config.maxOutputTokens != null) 'max_tokens': _config.maxOutputTokens,
+        if (_config.maxOutputTokens != null)
+          'max_tokens': _config.maxOutputTokens,
         if (_config.stopSequences != null && _config.stopSequences!.isNotEmpty)
           'stop': _config.stopSequences,
         if (_config.jsonMode) 'response_format': {'type': 'json_object'},

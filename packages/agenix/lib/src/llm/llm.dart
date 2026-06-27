@@ -42,12 +42,7 @@ abstract class LLM {
     required String apiKey,
     required String modelName,
     LlmConfig config = const LlmConfig(),
-  }) =>
-      Anthropic(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-      );
+  }) => Anthropic(apiKey: apiKey, modelName: modelName, config: config);
 
   /// Creates an OpenAI Chat-Completions backed [LLM] instance.
   ///
@@ -59,14 +54,13 @@ abstract class LLM {
     LlmConfig config = const LlmConfig(),
     String baseUrl = 'https://api.openai.com/v1',
     Map<String, String> extraHeaders = const {},
-  }) =>
-      OpenAI(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-        baseUrl: baseUrl,
-        extraHeaders: extraHeaders,
-      );
+  }) => OpenAI(
+    apiKey: apiKey,
+    modelName: modelName,
+    config: config,
+    baseUrl: baseUrl,
+    extraHeaders: extraHeaders,
+  );
 
   /// Creates a DeepSeek-backed [LLM] instance.
   ///
@@ -76,13 +70,12 @@ abstract class LLM {
     required String apiKey,
     required String modelName,
     LlmConfig config = const LlmConfig(),
-  }) =>
-      OpenAI(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-        baseUrl: 'https://api.deepseek.com/v1',
-      );
+  }) => OpenAI(
+    apiKey: apiKey,
+    modelName: modelName,
+    config: config,
+    baseUrl: 'https://api.deepseek.com/v1',
+  );
 
   /// Creates an xAI Grok-backed [LLM] instance.
   ///
@@ -92,13 +85,12 @@ abstract class LLM {
     required String apiKey,
     required String modelName,
     LlmConfig config = const LlmConfig(),
-  }) =>
-      OpenAI(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-        baseUrl: 'https://api.x.ai/v1',
-      );
+  }) => OpenAI(
+    apiKey: apiKey,
+    modelName: modelName,
+    config: config,
+    baseUrl: 'https://api.x.ai/v1',
+  );
 
   /// Creates a Groq-backed [LLM] instance.
   ///
@@ -109,13 +101,12 @@ abstract class LLM {
     required String apiKey,
     required String modelName,
     LlmConfig config = const LlmConfig(),
-  }) =>
-      OpenAI(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-        baseUrl: 'https://api.groq.com/openai/v1',
-      );
+  }) => OpenAI(
+    apiKey: apiKey,
+    modelName: modelName,
+    config: config,
+    baseUrl: 'https://api.groq.com/openai/v1',
+  );
 
   /// Creates a Mistral-backed [LLM] instance.
   ///
@@ -126,13 +117,12 @@ abstract class LLM {
     required String apiKey,
     required String modelName,
     LlmConfig config = const LlmConfig(),
-  }) =>
-      OpenAI(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-        baseUrl: 'https://api.mistral.ai/v1',
-      );
+  }) => OpenAI(
+    apiKey: apiKey,
+    modelName: modelName,
+    config: config,
+    baseUrl: 'https://api.mistral.ai/v1',
+  );
 
   /// Creates a Cohere-backed [LLM] instance.
   ///
@@ -143,10 +133,5 @@ abstract class LLM {
     required String apiKey,
     required String modelName,
     LlmConfig config = const LlmConfig(),
-  }) =>
-      Cohere(
-        apiKey: apiKey,
-        modelName: modelName,
-        config: config,
-      );
+  }) => Cohere(apiKey: apiKey, modelName: modelName, config: config);
 }

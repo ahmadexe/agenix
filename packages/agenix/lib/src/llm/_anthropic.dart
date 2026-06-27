@@ -22,20 +22,23 @@ class Anthropic extends LLM {
     required String modelName,
     LlmConfig config = const LlmConfig(),
     Dio? client,
-  })  : _modelName = modelName,
-        _config = config,
-        _client = client ??
-            Dio(BaseOptions(
-              baseUrl: 'https://api.anthropic.com/v1',
-              connectTimeout: config.timeout,
-              receiveTimeout: config.timeout,
-              sendTimeout: config.timeout,
-              headers: {
-                'x-api-key': apiKey,
-                'anthropic-version': '2023-06-01',
-                'Content-Type': 'application/json',
-              },
-            ));
+  }) : _modelName = modelName,
+       _config = config,
+       _client =
+           client ??
+           Dio(
+             BaseOptions(
+               baseUrl: 'https://api.anthropic.com/v1',
+               connectTimeout: config.timeout,
+               receiveTimeout: config.timeout,
+               sendTimeout: config.timeout,
+               headers: {
+                 'x-api-key': apiKey,
+                 'anthropic-version': '2023-06-01',
+                 'Content-Type': 'application/json',
+               },
+             ),
+           );
 
   @override
   String get modelId => _modelName;
@@ -80,8 +83,10 @@ class Anthropic extends LLM {
     } on DioException catch (e, st) {
       final status = e.response?.statusCode;
       final body = e.response?.data;
-      final detail = body is Map ? (body['error']?['message'] ?? body['message']) : null;
-      final msg = 'Anthropic call failed: ${detail ?? e.message} (status $status)';
+      final detail =
+          body is Map ? (body['error']?['message'] ?? body['message']) : null;
+      final msg =
+          'Anthropic call failed: ${detail ?? e.message} (status $status)';
       if (status == 429) {
         throw LlmRateLimitException(
           msg,
