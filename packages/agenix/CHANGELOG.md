@@ -1,3 +1,10 @@
+## 4.1.0
+- **Multi-provider LLM support** — built-in implementations for OpenAI, Anthropic, Cohere, Groq, DeepSeek, Mistral, and xAI (Grok) alongside the existing Gemini adapter. All OpenAI-compatible providers share a single adapter with a configurable `baseUrl`.
+- **`LlmRateLimitException`** — new typed exception (extends `LlmException`) thrown on HTTP 429 responses. Carries `retryAfter: Duration?` parsed from the `Retry-After` header and `statusCode: int` (defaults to 429).
+- **`LlmException.statusCode`** — all LLM HTTP errors now expose the HTTP status code via `statusCode: int?` for programmatic handling.
+- **Rolling memory summarization** — `Agent.create()` accepts `summarizationBatchSize: int` (default 0 = disabled). When enabled, evicted messages accumulate in a batch; once the batch reaches the threshold the LLM summarizes them into a rolling context prepended to every future prompt, preventing context window overflow on long conversations.
+- **Bounded DataStore reads** — `_MemoryManager` now tracks a per-conversation `_savedCount` counter so eviction computes are done without fetching the full message history; `getContext` never issues an unbounded `getMessages` call regardless of conversation length.
+
 ## 4.0.1
 - Added demo video to README showing live multi-agent orchestration and tool-call tracing.
 - Updated package description for clarity and discoverability.

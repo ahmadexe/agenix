@@ -1,3 +1,6 @@
+## 1.0.2
+- Bumped `agenix` dependency to `^4.1.0`.
+
 ## 1.0.1
 - Added demo video to README showing live multi-agent orchestration and tool-call tracing.
 - Updated package description for clarity and discoverability.

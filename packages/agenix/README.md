@@ -12,7 +12,8 @@
 
 A Flutter package for building AI agents with memory, tools, and multi-agent orchestration. Define your agent's personality, give it tools, and let it handle conversations — including delegating sub-tasks across a chain of specialized agents.
 
-<video src="https://github.com/user-attachments/assets/d92e6763-60bd-42a1-8d7c-d1e5535656bf" width="100%" controls></video>
+<img width="960" height="600" alt="agenix_demo" src="https://raw.githubusercontent.com/ahmadexe/agenix/main/docs/visuals/agenix_demo.gif" />
+
 
 > This is the **core** package. For Firebase persistence, see [`agenix_firebase`](https://pub.dev/packages/agenix_firebase).
 
@@ -79,7 +80,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  agenix: ^4.0.0
+  agenix: ^4.1.0
 ```
 
 Then run:
@@ -94,8 +95,8 @@ The core package ships with `DataStore.inMemory()` — a zero-dependency store f
 
 ```yaml
 dependencies:
-  agenix: ^4.0.0
-  agenix_firebase: ^1.0.0
+  agenix: ^4.1.0
+  agenix_firebase: ^1.0.2
 ```
 
 See [`agenix_firebase`](https://pub.dev/packages/agenix_firebase) for setup instructions.

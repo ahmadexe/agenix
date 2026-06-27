@@ -10,7 +10,7 @@ Firebase (Firestore + Storage + Auth) data store backend for the [agenix](https:
 
 This package provides `FirebaseDataStore`, an implementation of `DataStore` that persists conversations and messages to Cloud Firestore, uploads images to Firebase Storage, and scopes data per authenticated user via Firebase Auth.
 
-<video src="https://github.com/user-attachments/assets/d92e6763-60bd-42a1-8d7c-d1e5535656bf" width="100%" controls></video>
+<img width="960" height="600" alt="agenix_demo" src="https://raw.githubusercontent.com/ahmadexe/agenix/main/docs/visuals/agenix_demo.gif" />
 
 ---
 
@@ -18,8 +18,8 @@ This package provides `FirebaseDataStore`, an implementation of `DataStore` that
 
 ```yaml
 dependencies:
-  agenix: ^4.0.0
-  agenix_firebase: ^1.0.0
+  agenix: ^4.1.0
+  agenix_firebase: ^1.0.2
 ```
 
 ```bash
@@ -125,8 +125,8 @@ In agenix 3.x, Firebase was bundled in the core package. In 4.0.0, it was extrac
 ```diff
 # pubspec.yaml
   dependencies:
-    agenix: ^4.0.0
-+   agenix_firebase: ^1.0.0
+    agenix: ^4.1.0
++   agenix_firebase: ^1.0.2
 
 # Dart
 + import 'package:agenix_firebase/agenix_firebase.dart';
