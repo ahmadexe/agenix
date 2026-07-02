@@ -165,7 +165,9 @@ void main() {
       agent.dispose();
     });
 
-    test('max-iteration fallback synthesizes from observations', () async {
+    test('duplicate tool call is deduplicated and returns observations', () async {
+      // All responses request the same tool with identical params — dedup should
+      // fire on the second call (step 1) and return early with the observation.
       final responses = List.generate(
         kMaxToolIterations,
         (_) => '{"tools":"t","parameters":{"t":{}}}',
@@ -179,8 +181,9 @@ void main() {
         userMessage: userMsg('loop'),
       );
 
+      // Dedup fires after second LLM call sees the same tool+params combo.
       expect(res.content, contains('ok from t'));
-      expect(llm.callCount, kMaxToolIterations);
+      expect(llm.callCount, 2);
       agent.dispose();
     });
 

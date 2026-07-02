@@ -26,5 +26,13 @@ abstract class Tool {
   });
 
   /// Executes the tool with the given validated parameters.
+  ///
+  /// **Idempotency contract:** if this tool has observable side effects
+  /// (writes to a database, sends a message, charges a card), implementations
+  /// SHOULD be idempotent — use upsert semantics, a natural key, or an
+  /// explicit idempotency token in the parameters. The framework guards
+  /// against duplicate `(name, params)` invocations within a single turn,
+  /// but it cannot detect semantically-equivalent calls with different
+  /// parameter shapes, so this contract is the final line of defence.
   Future<ToolResponse> run(Map<String, dynamic> params);
 }
