@@ -262,21 +262,24 @@ class Agent {
           if (remaining.isEmpty) {
             // Model re-requested only already-attempted tools. Return with
             // whatever we have so we don't burn more LLM calls.
-            final successMessages = observations
-                .where((o) => o['success'] == true)
-                .map((o) => (o['message'] ?? '').toString())
-                .where((m) => m.isNotEmpty)
-                .toList();
-            final content = successMessages.isNotEmpty
-                ? successMessages.join('\n')
-                : kLLMResponseOnFailure;
+            final successMessages =
+                observations
+                    .where((o) => o['success'] == true)
+                    .map((o) => (o['message'] ?? '').toString())
+                    .where((m) => m.isNotEmpty)
+                    .toList();
+            final content =
+                successMessages.isNotEmpty
+                    ? successMessages.join('\n')
+                    : kLLMResponseOnFailure;
             return AgentMessage(
               content: content,
               isFromAgent: true,
               generatedAt: DateTime.now(),
-              data: observations.isNotEmpty
-                  ? {'observations': observations}
-                  : null,
+              data:
+                  observations.isNotEmpty
+                      ? {'observations': observations}
+                      : null,
             );
           }
 
