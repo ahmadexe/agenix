@@ -81,7 +81,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  agenix: ^4.1.1
+  agenix: ^4.1.2
 ```
 
 Then run:
@@ -96,8 +96,8 @@ The core package ships with `DataStore.inMemory()` — a zero-dependency store f
 
 ```yaml
 dependencies:
-  agenix: ^4.1.1
-  agenix_firebase: ^1.0.3
+  agenix: ^4.1.2
+  agenix_firebase: ^1.0.4
 ```
 
 See [`agenix_firebase`](https://pub.dev/packages/agenix_firebase) for setup instructions.
@@ -415,6 +415,17 @@ agent.toolRegistry.unregisterTool('weather_tool');
 | `message` | `String` | Human-readable result shown to the user |
 | `data` | `Map?` | Structured data for agent chaining or further reasoning |
 | `needsFurtherReasoning` | `bool` | When `true`, the agent makes a second LLM call to synthesize the tool output into a natural-language answer |
+
+#### Tool loop safety
+
+Within a single turn, the agent hard-blocks re-execution of any
+`(tool name, parameters)` combo that has already been attempted. If the LLM
+ignores instructions and re-requests a succeeded tool, the framework filters
+it out before `run()` is called; if the whole batch is filtered to empty, the
+loop returns immediately with the accumulated success messages instead of
+burning another LLM round trip. See
+[docs/usage_guide/tools.md](../../docs/usage_guide/tools.md#tool-loop-safety)
+for details, including the idempotency contract for side-effecting tools.
 
 ---
 
