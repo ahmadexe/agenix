@@ -32,12 +32,12 @@ The core `agenix` package ships with `DataStore.inMemory()` — a zero-dependenc
 ```yaml
 # Core only (no Firebase):
 dependencies:
-  agenix: ^4.1.1
+  agenix: ^4.1.2
 
 # With Firebase persistence:
 dependencies:
-  agenix: ^4.1.1
-  agenix_firebase: ^1.0.3
+  agenix: ^4.1.2
+  agenix_firebase: ^1.0.4
 ```
 
 ```dart
@@ -119,13 +119,13 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  agenix: ^4.1.1
+  agenix: ^4.1.2
 ```
 
 If you need Firebase persistence, also add:
 
 ```yaml
-  agenix_firebase: ^1.0.3
+  agenix_firebase: ^1.0.4
 ```
 
 Then run:

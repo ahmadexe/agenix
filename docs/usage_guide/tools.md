@@ -348,6 +348,42 @@ The LLM can invoke multiple tools in a single turn. For example, if a user asks 
 
 You don't need to do anything special to enable this. Just register your tools and the LLM will decide when to use multiple tools.
 
+## Tool Loop Safety
+
+Within a single turn, agenix enforces two guarantees so a stubborn model can't
+duplicate side effects or waste your LLM budget:
+
+1. **No duplicate `(tool, params)` execution.** Every invocation is keyed by
+   `(tool name + parameters JSON)`. If the model requests the same call again
+   in a later iteration — whether it succeeded or failed the first time —
+   the framework filters it out *before* `run()` is called.
+2. **Early return when nothing remains to do.** If a follow-up model turn
+   asks only for tools that have already been attempted, the loop exits
+   immediately with the joined success messages instead of doing another
+   LLM round trip.
+
+The observation prompt sent back to the model between iterations makes this
+explicit: succeeded calls are listed under an "already completed — the
+framework will REJECT re-invocations" section, failures under a "retry ONLY
+with corrected parameters" section. Well-behaved models respond as soon as
+the task is done; misbehaving models are hard-blocked by the filter.
+
+### Idempotency contract for side-effecting tools
+
+The framework can detect a *literal* duplicate — same tool, same parameters.
+It **cannot** detect semantic duplicates, e.g. the model calling
+`save_task({title: "rent"})` and then `save_task({title: "rent ", note: "retry"})`
+— those are different `(name, params)` keys, so both will run.
+
+If your tool has observable side effects (DB writes, external API calls,
+messages sent, payments), make it idempotent:
+
+- Prefer **upsert semantics** on a natural key (`title`, `user_id`, etc.).
+- Or accept an explicit **idempotency token** as a required parameter.
+- Or check for an existing record before inserting a new one.
+
+This contract is documented on `Tool.run()` and is the final line of defence.
+
 ## Best Practices
 
 1. **Name tools clearly.** Use `snake_case` verbs: `search_recipes`, `get_weather`, `send_email`. The LLM uses the name to decide when to call the tool.

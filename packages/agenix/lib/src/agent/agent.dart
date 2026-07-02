@@ -207,6 +207,10 @@ class Agent {
 
     // Accumulated tool observations for multi-step tool use.
     final observations = <Map<String, dynamic>>[];
+    // Per-tool (name + params) keys that have already been attempted this turn.
+    // Used to hard-block re-execution — the model cannot repeat a call even if
+    // it ignores the observation prompt.
+    final attemptedCalls = <String>{};
     var currentPrompt = prompt;
     var isFirstCall = true;
 
@@ -240,8 +244,62 @@ class Agent {
           );
 
         case ParseOutcome.tools:
+          // Filter out any (tool, params) combo already attempted this turn.
+          // Prevents duplicate side effects even if the model ignores the
+          // observation prompt's "do not re-invoke" instruction.
+          final remaining = <String>[];
+          final remainingKeys = <String>[];
+          for (final toolName in parsed.toolNames) {
+            final key = json.encode({
+              'tool': toolName,
+              'params': parsed.params[toolName] ?? const <String, dynamic>{},
+            });
+            if (attemptedCalls.contains(key)) continue;
+            remaining.add(toolName);
+            remainingKeys.add(key);
+          }
+
+          if (remaining.isEmpty) {
+            // Model re-requested only already-attempted tools. Return with
+            // whatever we have so we don't burn more LLM calls.
+            final successMessages =
+                observations
+                    .where((o) => o['success'] == true)
+                    .map((o) => (o['message'] ?? '').toString())
+                    .where((m) => m.isNotEmpty)
+                    .toList();
+            final content =
+                successMessages.isNotEmpty
+                    ? successMessages.join('\n')
+                    : kLLMResponseOnFailure;
+            return AgentMessage(
+              content: content,
+              isFromAgent: true,
+              generatedAt: DateTime.now(),
+              data:
+                  observations.isNotEmpty
+                      ? {'observations': observations}
+                      : null,
+            );
+          }
+
+          // Mark as attempted BEFORE running so an exception mid-flight still
+          // blocks a naive retry of the same call.
+          attemptedCalls.addAll(remainingKeys);
+
+          final filteredParsed = PromptParserResult(
+            outcome: ParseOutcome.tools,
+            toolNames: remaining,
+            params: {
+              for (final t in remaining)
+                t: parsed.params[t] ?? const <String, dynamic>{},
+            },
+            agentNames: parsed.agentNames,
+            rawOutput: parsed.rawOutput,
+          );
+
           final toolResponses = await _toolRunner.runTools(
-            parsed,
+            filteredParsed,
             toolRegistry,
           );
 
@@ -262,8 +320,8 @@ class Agent {
             return _reasonUsingData(userMessage.content, toolResponses);
           }
 
-          // Build a follow-up prompt with observations so the LLM can
-          // decide whether to call more tools or produce a final response.
+          // Build a follow-up prompt with an explicit succeeded/failed split
+          // so the LLM knows exactly what remains and what NOT to repeat.
           currentPrompt = _buildObservationPrompt(
             originalPrompt: prompt,
             observations: observations,
@@ -329,11 +387,47 @@ class Agent {
     required String originalPrompt,
     required List<Map<String, dynamic>> observations,
   }) {
-    final observationJson = json.encode(observations);
-    return '$originalPrompt\n\n'
-        'Tool observations so far:\n$observationJson\n\n'
-        'Based on these observations, either call more tools if needed or '
-        'provide a final response in JSON format.';
+    final succeeded = observations.where((o) => o['success'] == true).toList();
+    final failed = observations.where((o) => o['success'] != true).toList();
+
+    final buffer = StringBuffer(originalPrompt);
+    buffer.writeln('\n\nTool execution results so far:');
+
+    if (succeeded.isNotEmpty) {
+      buffer.writeln(
+        '\nAlready completed successfully — the framework will REJECT any '
+        'attempt to invoke these again with the same parameters:',
+      );
+      for (final o in succeeded) {
+        buffer.writeln('- ${o['tool']}: ${o['message']}');
+      }
+    }
+
+    if (failed.isNotEmpty) {
+      buffer.writeln(
+        '\nFailed — you may retry ONLY with corrected parameters, or '
+        'acknowledge the failure in your response:',
+      );
+      for (final o in failed) {
+        buffer.writeln('- ${o['tool']}: ${o['message']}');
+      }
+    }
+
+    if (failed.isEmpty) {
+      buffer.writeln(
+        '\nAll requested actions are complete. If the user\'s task is fully '
+        'done, respond NOW with {"response": "<brief confirmation>"}. '
+        'Only call another tool if a DIFFERENT next step is genuinely required.',
+      );
+    } else {
+      buffer.writeln(
+        '\nDecide: call the next required tool, retry a failed one with '
+        'corrected params, or respond with {"response": "..."}. '
+        'Never re-invoke a succeeded tool.',
+      );
+    }
+
+    return buffer.toString().trim();
   }
 
   Future<AgentMessage> _handleAgentChain({

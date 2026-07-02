@@ -1,3 +1,8 @@
+## 4.1.2
+- **Tool loop hardening** — the agent now hard-blocks re-execution of any `(tool, params)` combo already attempted in the same turn. If the LLM ignores the observation prompt and re-requests a succeeded tool, the framework filters it out before it reaches the tool's `run()` method, and if the whole batch is filtered to empty, the loop returns immediately with the accumulated success messages instead of burning more LLM calls. Fixes duplicate side effects (e.g. double-inserted DB rows) observed with strict instruction-following models that would otherwise repeat successful tool calls.
+- **Explicit succeeded/failed observation prompt** — the follow-up prompt now enumerates completed calls under a dedicated "already completed — the framework will REJECT re-invocations" section and failures under a "retry ONLY with corrected parameters" section, with an explicit directive to respond when nothing remains. Previously the raw observation JSON left "the task" looking unaddressed alongside the tool results.
+- **Documented idempotency contract** — the `Tool.run()` dartdoc now formally states that side-effecting tools should be idempotent (upsert semantics, natural key, or idempotency token), since framework-level dedup cannot detect semantically-equivalent calls with different parameter shapes.
+
 ## 4.1.1
 - Updated documentation to list all built-in LLM providers (Gemini, OpenAI, Anthropic, Groq, DeepSeek, Cohere, xAI) and clarify the custom LLM extension point.
 
